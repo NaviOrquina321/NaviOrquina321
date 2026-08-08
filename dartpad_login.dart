@@ -10,7 +10,7 @@ class ClinicApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Doctors Appointment Login',
+      title: 'Doctors Appointment',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
@@ -22,13 +22,178 @@ class ClinicApp extends StatelessWidget {
         ),
         fontFamily: 'Roboto',
       ),
-      home: const LoginPage(),
+      home: const MainNavigationPage(),
     );
   }
 }
 
+/// Dynamic Data Models
+class Doctor {
+  final String name;
+  final String specialty;
+  final String rating;
+  final String fee;
+  final String imageUrl;
+  final List<String> availableSlots;
+
+  Doctor({
+    required this.name,
+    required this.specialty,
+    required this.rating,
+    required this.fee,
+    required this.imageUrl,
+    required this.availableSlots,
+  });
+}
+
+class Appointment {
+  final String id;
+  final Doctor doctor;
+  final String patientName;
+  final String date;
+  final String time;
+  String status; // 'Pending', 'Completed', 'Cancelled'
+
+  Appointment({
+    required this.id,
+    required this.doctor,
+    required this.patientName,
+    required this.date,
+    required this.time,
+    this.status = 'Pending',
+  });
+}
+
+/// Global In-Memory Database / State Manager
+class AppDatabase {
+  static final List<Doctor> doctors = [
+    Doctor(
+      name: 'Dr. Sarah Connor',
+      specialty: 'Cardiologist',
+      rating: '4.9',
+      fee: '\$150',
+      imageUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=200',
+      availableSlots: ['09:00 AM', '10:30 AM', '02:00 PM', '04:30 PM'],
+    ),
+    Doctor(
+      name: 'Dr. Marcus Aurelius',
+      specialty: 'Neurologist',
+      rating: '4.8',
+      fee: '\$180',
+      imageUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=200',
+      availableSlots: ['08:30 AM', '11:00 AM', '01:30 PM', '03:00 PM'],
+    ),
+    Doctor(
+      name: 'Dr. Elizabeth Blackwell',
+      specialty: 'Pediatrician',
+      rating: '5.0',
+      fee: '\$120',
+      imageUrl: 'https://images.unsplash.com/photo-1594824813573-246434de83fb?auto=format&fit=crop&q=80&w=200',
+      availableSlots: ['09:30 AM', '10:00 AM', '11:30 AM', '03:30 PM'],
+    ),
+    Doctor(
+      name: 'Dr. Albert Schweitzer',
+      specialty: 'General Physician',
+      rating: '4.7',
+      fee: '\$90',
+      imageUrl: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=200',
+      availableSlots: ['10:00 AM', '12:00 PM', '02:30 PM', '04:00 PM'],
+    ),
+  ];
+
+  static final List<Appointment> appointments = _initAppointments();
+
+  static List<Appointment> _initAppointments() {
+    return [
+      Appointment(
+        id: 'APT-1001',
+        doctor: doctors[0],
+        patientName: 'John Doe',
+        date: '2026-08-15',
+        time: '10:30 AM',
+        status: 'Pending',
+      ),
+      Appointment(
+        id: 'APT-1002',
+        doctor: doctors[2],
+        patientName: 'Jane Watson',
+        date: '2026-08-16',
+        time: '11:30 AM',
+        status: 'Completed',
+      ),
+    ];
+  }
+}
+
+/// Navigation Hub controlling active screens and logged in users
+class MainNavigationPage extends StatefulWidget {
+  const MainNavigationPage({super.key});
+
+  @override
+  State<MainNavigationPage> createState() => _MainNavigationPageState();
+}
+
+class _MainNavigationPageState extends State<MainNavigationPage> {
+  bool _isLoggedIn = false;
+  String _userRole = 'Patient'; // 'Patient' or 'Doctor'
+  String _loggedInName = 'Guest';
+
+  void _login(String email, String role) {
+    setState(() {
+      _isLoggedIn = true;
+      _userRole = role;
+      _loggedInName = role == 'Doctor' ? 'Dr. Sarah Connor' : email.split('@')[0];
+    });
+  }
+
+  void _logout() {
+    setState(() {
+      _isLoggedIn = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_isLoggedIn) {
+      return LoginPage(onLogin: _login);
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          _userRole == 'Doctor' ? 'Doctor Dashboard' : 'Clinic Appointment Scheduler',
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        backgroundColor: const Color(0xFF0F52BA),
+        iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 12.0),
+              child: Text(
+                'Hi, $_loggedInName',
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: _logout,
+            tooltip: 'Logout',
+          ),
+        ],
+      ),
+      body: _userRole == 'Doctor'
+          ? const DoctorDashboardPage()
+          : PatientDashboardPage(patientName: _loggedInName),
+    );
+  }
+}
+
+/// Completely Functional Login Form utilizing CustomPainter Medical Logo
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final Function(String email, String role) onLogin;
+  const LoginPage({super.key, required this.onLogin});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -37,8 +202,8 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   bool _obscurePassword = true;
+  String _selectedRole = 'Patient'; // Default Role Selection
 
-  // Controllers to access entered text
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -52,7 +217,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F8FC), // Cool professional light blue/grey background
+      backgroundColor: const Color(0xFFF5F8FC),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -64,7 +229,7 @@ class _LoginPageState extends State<LoginPage> {
                 borderRadius: BorderRadius.circular(24.0),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
+                    color: Colors.black.withAlpha(15),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -77,16 +242,16 @@ class _LoginPageState extends State<LoginPage> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Beautiful Native Custom Drawn Stethoscope, Calendar & Medical Cross Logo
+                      // Medical Stethoscope, Calendar & Cross Logo using native CustomPainter
                       Container(
-                        height: 140,
-                        width: 140,
+                        height: 120,
+                        width: 120,
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.blue.withOpacity(0.05),
+                              color: Colors.blue.withAlpha(13),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             )
@@ -94,17 +259,16 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         padding: const EdgeInsets.all(12),
                         child: CustomPaint(
-                          size: const Size(120, 120),
+                          size: const Size(100, 100),
                           painter: MedicalLogoPainter(),
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
 
-                      // Heading Style
                       const Text(
                         'Doctors Appointment',
                         style: TextStyle(
-                          fontSize: 26,
+                          fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF0B2C5F),
                           letterSpacing: 0.5,
@@ -113,15 +277,89 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Welcome Back! Please login to your account',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                          height: 1.4,
-                        ),
+                        'Login to book or manage appointments',
+                        style: TextStyle(fontSize: 13, color: Colors.grey),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 20),
+
+                      // User Role Selector segment
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.all(4),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: ChoiceChip(
+                                label: const Center(child: Text('Patient')),
+                                selected: _selectedRole == 'Patient',
+                                onSelected: (selected) {
+                                  if (selected) setState(() => _selectedRole = 'Patient');
+                                },
+                                backgroundColor: Colors.transparent,
+                                selectedColor: Colors.white,
+                                showCheckmark: false,
+                                side: BorderSide.none,
+                              ),
+                            ),
+                            Expanded(
+                              child: ChoiceChip(
+                                label: const Center(child: Text('Doctor')),
+                                selected: _selectedRole == 'Doctor',
+                                onSelected: (selected) {
+                                  if (selected) setState(() => _selectedRole = 'Doctor');
+                                },
+                                backgroundColor: Colors.transparent,
+                                selectedColor: Colors.white,
+                                showCheckmark: false,
+                                side: BorderSide.none,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Quick Login Hint Boxes to ease evaluation
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              _emailController.text = 'patient@clinic.com';
+                              _passwordController.text = 'password123';
+                              setState(() => _selectedRole = 'Patient');
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Text('Patient Demo', style: TextStyle(fontSize: 11, color: Color(0xFF0F52BA))),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              _emailController.text = 'doctor@clinic.com';
+                              _passwordController.text = 'doctor123';
+                              setState(() => _selectedRole = 'Doctor');
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Text('Doctor Demo', style: TextStyle(fontSize: 11, color: Color(0xFF0A2540))),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
 
                       // Email Field
                       TextFormField(
@@ -137,28 +375,18 @@ class _LoginPageState extends State<LoginPage> {
                             borderRadius: BorderRadius.circular(16),
                             borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                           ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: const BorderSide(color: Color(0xFF0F52BA), width: 2),
-                          ),
-                          labelStyle: const TextStyle(color: Color(0xFF5E6E85)),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return 'Please enter your email';
                           }
-                          // Simple regex validation
                           if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                            return 'Please enter a valid email address';
+                            return 'Please enter a valid email';
                           }
                           return null;
                         },
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
 
                       // Password Field
                       TextFormField(
@@ -173,11 +401,7 @@ class _LoginPageState extends State<LoginPage> {
                               _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
                               color: const Color(0xFF5E6E85),
                             ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
+                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                           ),
                           filled: true,
                           fillColor: const Color(0xFFF9FAFC),
@@ -185,15 +409,6 @@ class _LoginPageState extends State<LoginPage> {
                             borderRadius: BorderRadius.circular(16),
                             borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                           ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: const BorderSide(color: Color(0xFF0F52BA), width: 2),
-                          ),
-                          labelStyle: const TextStyle(color: Color(0xFF5E6E85)),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -205,57 +420,12 @@ class _LoginPageState extends State<LoginPage> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 24),
 
-                      // Remember Me & Forgot Password
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              SizedBox(
-                                height: 24,
-                                width: 24,
-                                child: Checkbox(
-                                  value: true,
-                                  onChanged: (bool? val) {},
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              const Text(
-                                'Remember me',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFF5E6E85),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              // Just UI decoration, no actual business logic/action
-                            },
-                            child: const Text(
-                              'Forgot Password?',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF0F52BA),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 28),
-
-                      // Sign In Button
+                      // Sign In Button (Fully Functional Navigation Trigger)
                       SizedBox(
                         width: double.infinity,
-                        height: 56,
+                        height: 52,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF0F52BA),
@@ -263,65 +433,17 @@ class _LoginPageState extends State<LoginPage> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
-                            elevation: 2,
                           ),
                           onPressed: () {
-                            // Run UI validation without performing any actual backend login action/navigation
                             if (_formKey.currentState!.validate()) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Row(
-                                    children: const [
-                                      Icon(Icons.check_circle, color: Colors.white),
-                                      SizedBox(width: 8),
-                                      Text('Validation Successful (No functionality)!'),
-                                    ],
-                                  ),
-                                  backgroundColor: const Color(0xFF2E7D32),
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                              );
+                              widget.onLogin(_emailController.text, _selectedRole);
                             }
                           },
                           child: const Text(
                             'Sign In',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Register Link
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Don\'t have an account? ',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF5E6E85),
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              // Just UI decoration
-                            },
-                            child: const Text(
-                              'Sign Up',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF0F52BA),
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
                     ],
                   ),
@@ -329,6 +451,425 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Patients Interface: Interactive Search, Detailed view, and Dynamic Slot Booking
+class PatientDashboardPage extends StatefulWidget {
+  final String patientName;
+  const PatientDashboardPage({super.key, required this.patientName});
+
+  @override
+  State<PatientDashboardPage> createState() => _PatientDashboardPageState();
+}
+
+class _PatientDashboardPageState extends State<PatientDashboardPage> {
+  List<Doctor> _filteredDoctors = AppDatabase.doctors;
+
+  void _filterDoctors(String query) {
+    setState(() {
+      _filteredDoctors = AppDatabase.doctors
+          .where((doc) =>
+              doc.name.toLowerCase().contains(query.toLowerCase()) ||
+              doc.specialty.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    });
+  }
+
+  void _bookAppointment(Doctor doctor, String date, String slot) {
+    setState(() {
+      AppDatabase.appointments.add(
+        Appointment(
+          id: 'APT-${1000 + AppDatabase.appointments.length + 1}',
+          doctor: doctor,
+          patientName: widget.patientName,
+          date: date,
+          time: slot,
+          status: 'Pending',
+        ),
+      );
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Successfully Booked Appointment with ${doctor.name}!'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void _cancelAppointment(String id) {
+    setState(() {
+      AppDatabase.appointments.firstWhere((apt) => apt.id == id).status = 'Cancelled';
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Appointment Cancelled.')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Your Scheduled Appointments',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0B2C5F)),
+          ),
+          const SizedBox(height: 8),
+          AppDatabase.appointments.where((apt) => apt.patientName == widget.patientName).isEmpty
+              ? const Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text('No active appointments booked yet.', style: TextStyle(color: Colors.grey)),
+                  ),
+                )
+              : ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: AppDatabase.appointments.where((apt) => apt.patientName == widget.patientName).length,
+                  itemBuilder: (context, index) {
+                    final apt = AppDatabase.appointments
+                        .where((a) => a.patientName == widget.patientName)
+                        .toList()[index];
+                    Color statusColor = Colors.orange;
+                    if (apt.status == 'Completed') statusColor = Colors.green;
+                    if (apt.status == 'Cancelled') statusColor = Colors.red;
+
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      child: ListTile(
+                        title: Text(apt.doctor.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Text('${apt.doctor.specialty} • ${apt.date} at ${apt.time}'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: statusColor.withAlpha(25),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                apt.status,
+                                style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 12),
+                              ),
+                            ),
+                            if (apt.status == 'Pending') ...[
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(Icons.cancel, color: Colors.red),
+                                onPressed: () => _cancelAppointment(apt.id),
+                                tooltip: 'Cancel Booking',
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+          const SizedBox(height: 24),
+          const Text(
+            'Find and Book a Doctor',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0B2C5F)),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            onChanged: _filterDoctors,
+            decoration: InputDecoration(
+              hintText: 'Search by Doctor name or specialty...',
+              prefixIcon: const Icon(Icons.search),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _filteredDoctors.length,
+            itemBuilder: (context, index) {
+              final doc = _filteredDoctors[index];
+              return Card(
+                elevation: 1.5,
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundImage: NetworkImage(doc.imageUrl),
+                        backgroundColor: Colors.grey[200],
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(doc.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            Text(doc.specialty, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(Icons.star, color: Colors.amber, size: 16),
+                                const SizedBox(width: 4),
+                                Text(doc.rating, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                                const SizedBox(width: 12),
+                                Text('Fee: ${doc.fee}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF0F52BA))),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0F52BA),
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: () {
+                          _showBookingSheet(context, doc);
+                        },
+                        child: const Text('Book'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showBookingSheet(BuildContext context, Doctor doctor) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        String selectedDate = '2026-08-15';
+        String selectedSlot = doctor.availableSlots[0];
+
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 24,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Book appointment with ${doctor.name}',
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Select Date', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    value: selectedDate,
+                    items: ['2026-08-15', '2026-08-16', '2026-08-17', '2026-08-18'].map((date) {
+                      return DropdownMenuItem(value: date, child: Text(date));
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) setModalState(() => selectedDate = val);
+                    },
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Select Available Time Slot', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: doctor.availableSlots.map((slot) {
+                      final isSelected = selectedSlot == slot;
+                      return ChoiceChip(
+                        label: Text(slot),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          if (selected) setModalState(() => selectedSlot = slot);
+                        },
+                        selectedColor: const Color(0xFF0F52BA),
+                        labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0F52BA),
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () {
+                        _bookAppointment(doctor, selectedDate, selectedSlot);
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Confirm Booking', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+/// Doctor Dashboard: View, complete, or cancel appointments
+class DoctorDashboardPage extends StatefulWidget {
+  const DoctorDashboardPage({super.key});
+
+  @override
+  State<DoctorDashboardPage> createState() => _DoctorDashboardPageState();
+}
+
+class _DoctorDashboardPageState extends State<DoctorDashboardPage> {
+  void _changeStatus(String id, String newStatus) {
+    setState(() {
+      AppDatabase.appointments.firstWhere((apt) => apt.id == id).status = newStatus;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Appointment updated to $newStatus.')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pendingCount = AppDatabase.appointments.where((a) => a.status == 'Pending').length;
+    final completedCount = AppDatabase.appointments.where((a) => a.status == 'Completed').length;
+    final cancelledCount = AppDatabase.appointments.where((a) => a.status == 'Cancelled').length;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Row of stats cards
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard('Pending', pendingCount.toString(), Colors.orange),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatCard('Completed', completedCount.toString(), Colors.green),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatCard('Cancelled', cancelledCount.toString(), Colors.red),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Patient Bookings List',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0B2C5F)),
+          ),
+          const SizedBox(height: 12),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: AppDatabase.appointments.length,
+            itemBuilder: (context, index) {
+              final apt = AppDatabase.appointments[index];
+              Color statusColor = Colors.orange;
+              if (apt.status == 'Completed') statusColor = Colors.green;
+              if (apt.status == 'Cancelled') statusColor = Colors.red;
+
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            apt.patientName,
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: statusColor.withAlpha(25),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              apt.status,
+                              style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text('Schedule: ${apt.date} at ${apt.time}'),
+                      Text('Assigned Doctor: ${apt.doctor.name}'),
+                      if (apt.status == 'Pending') ...[
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton.icon(
+                              onPressed: () => _changeStatus(apt.id, 'Cancelled'),
+                              icon: const Icon(Icons.close, color: Colors.red),
+                              label: const Text('Cancel', style: TextStyle(color: Colors.red)),
+                            ),
+                            const SizedBox(width: 12),
+                            ElevatedButton.icon(
+                              onPressed: () => _changeStatus(apt.id, 'Completed'),
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+                              icon: const Icon(Icons.check),
+                              label: const Text('Complete'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String title, String count, Color color) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Text(title, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+            const SizedBox(height: 4),
+            Text(
+              count,
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: color),
+            ),
+          ],
         ),
       ),
     );
