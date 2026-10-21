@@ -1,0 +1,443 @@
+class User {
+  final int? id;
+  final String role; // 'patient' or 'doctor'
+  final String fullName;
+  final String email;
+  final String passwordHash;
+  final String salt;
+  final String createdAt;
+
+  User({
+    this.id,
+    required this.role,
+    required this.fullName,
+    required this.email,
+    required this.passwordHash,
+    required this.salt,
+    required this.createdAt,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      if (id != null) 'id': id,
+      'role': role,
+      'full_name': fullName,
+      'email': email,
+      'password_hash': passwordHash,
+      'salt': salt,
+      'created_at': createdAt,
+    };
+  }
+
+  factory User.fromMap(Map<String, dynamic> map) {
+    return User(
+      id: map['id'] as int?,
+      role: map['role'] as String,
+      fullName: map['full_name'] as String,
+      email: map['email'] as String,
+      passwordHash: map['password_hash'] as String,
+      salt: map['salt'] as String,
+      createdAt: map['created_at'] as String,
+    );
+  }
+
+  User copyWith({
+    int? id,
+    String? role,
+    String? fullName,
+    String? email,
+    String? passwordHash,
+    String? salt,
+    String? createdAt,
+  }) {
+    return User(
+      id: id ?? this.id,
+      role: role ?? this.role,
+      fullName: fullName ?? this.fullName,
+      email: email ?? this.email,
+      passwordHash: passwordHash ?? this.passwordHash,
+      salt: salt ?? this.salt,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+}
+
+class Doctor {
+  final int? id;
+  final int userId;
+  final String? specialty;
+  final String? room;
+  final String? bio;
+  final double rating;
+  final int yearsExperience;
+  final int patientsCount;
+  final int autoConfirm; // 1 or 0
+  final User? user;
+
+  Doctor({
+    this.id,
+    required this.userId,
+    this.specialty,
+    this.room,
+    this.bio,
+    this.rating = 5.0,
+    this.yearsExperience = 0,
+    this.patientsCount = 0,
+    this.autoConfirm = 1,
+    this.user,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      if (id != null) 'id': id,
+      'user_id': userId,
+      'specialty': specialty,
+      'room': room,
+      'bio': bio,
+      'rating': rating,
+      'years_experience': yearsExperience,
+      'patients_count': patientsCount,
+      'auto_confirm': autoConfirm,
+    };
+  }
+
+  factory Doctor.fromMap(Map<String, dynamic> map, {User? user}) {
+    return Doctor(
+      id: map['id'] as int?,
+      userId: map['user_id'] as int,
+      specialty: map['specialty'] as String?,
+      room: map['room'] as String?,
+      bio: map['bio'] as String?,
+      rating: (map['rating'] as num?)?.toDouble() ?? 5.0,
+      yearsExperience: (map['years_experience'] as int?) ?? 0,
+      patientsCount: (map['patients_count'] as int?) ?? 0,
+      autoConfirm: (map['auto_confirm'] as int?) ?? 1,
+      user: user,
+    );
+  }
+
+  Doctor copyWith({
+    int? id,
+    int? userId,
+    String? specialty,
+    String? room,
+    String? bio,
+    double? rating,
+    int? yearsExperience,
+    int? patientsCount,
+    int? autoConfirm,
+    User? user,
+  }) {
+    return Doctor(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      specialty: specialty ?? this.specialty,
+      room: room ?? this.room,
+      bio: bio ?? this.bio,
+      rating: rating ?? this.rating,
+      yearsExperience: yearsExperience ?? this.yearsExperience,
+      patientsCount: patientsCount ?? this.patientsCount,
+      autoConfirm: autoConfirm ?? this.autoConfirm,
+      user: user ?? this.user,
+    );
+  }
+}
+
+class Availability {
+  final int? id;
+  final int doctorId;
+  final int weekday; // 1-7 (Mon-Sun)
+  final String startTime; // 'HH:mm'
+  final String endTime; // 'HH:mm'
+  final int isEnabled; // 1 or 0
+  final int slotMinutes; // default 30
+
+  Availability({
+    this.id,
+    required this.doctorId,
+    required this.weekday,
+    required this.startTime,
+    required this.endTime,
+    required this.isEnabled,
+    this.slotMinutes = 30,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      if (id != null) 'id': id,
+      'doctor_id': doctorId,
+      'weekday': weekday,
+      'start_time': startTime,
+      'end_time': endTime,
+      'is_enabled': isEnabled,
+      'slot_minutes': slotMinutes,
+    };
+  }
+
+  factory Availability.fromMap(Map<String, dynamic> map) {
+    return Availability(
+      id: map['id'] as int?,
+      doctorId: map['doctor_id'] as int,
+      weekday: map['weekday'] as int,
+      startTime: map['start_time'] as String,
+      endTime: map['end_time'] as String,
+      isEnabled: map['is_enabled'] as int,
+      slotMinutes: (map['slot_minutes'] as int?) ?? 30,
+    );
+  }
+
+  Availability copyWith({
+    int? id,
+    int? doctorId,
+    int? weekday,
+    String? startTime,
+    String? endTime,
+    int? isEnabled,
+    int? slotMinutes,
+  }) {
+    return Availability(
+      id: id ?? this.id,
+      doctorId: doctorId ?? this.doctorId,
+      weekday: weekday ?? this.weekday,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      isEnabled: isEnabled ?? this.isEnabled,
+      slotMinutes: slotMinutes ?? this.slotMinutes,
+    );
+  }
+}
+
+class Appointment {
+  final int? id;
+  final int patientId;
+  final int doctorId;
+  final String date; // 'yyyy-MM-dd'
+  final String time; // 'HH:mm'
+  final String? reason;
+  final String status; // 'pending','confirmed','in_progress','completed','cancelled','declined'
+  final String? notes;
+  final String? nextVisit;
+  final String createdAt;
+  final User? patientUser;
+  final Doctor? doctor;
+
+  Appointment({
+    this.id,
+    required this.patientId,
+    required this.doctorId,
+    required this.date,
+    required this.time,
+    this.reason,
+    required this.status,
+    this.notes,
+    this.nextVisit,
+    required this.createdAt,
+    this.patientUser,
+    this.doctor,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      if (id != null) 'id': id,
+      'patient_id': patientId,
+      'doctor_id': doctorId,
+      'date': date,
+      'time': time,
+      'reason': reason,
+      'status': status,
+      'notes': notes,
+      'next_visit': nextVisit,
+      'created_at': createdAt,
+    };
+  }
+
+  factory Appointment.fromMap(Map<String, dynamic> map, {User? patientUser, Doctor? doctor}) {
+    return Appointment(
+      id: map['id'] as int?,
+      patientId: map['patient_id'] as int,
+      doctorId: map['doctor_id'] as int,
+      date: map['date'] as String,
+      time: map['time'] as String,
+      reason: map['reason'] as String?,
+      status: map['status'] as String,
+      notes: map['notes'] as String?,
+      nextVisit: map['next_visit'] as String?,
+      createdAt: map['created_at'] as String,
+      patientUser: patientUser,
+      doctor: doctor,
+    );
+  }
+
+  Appointment copyWith({
+    int? id,
+    int? patientId,
+    int? doctorId,
+    String? date,
+    String? time,
+    String? reason,
+    String? status,
+    String? notes,
+    String? nextVisit,
+    String? createdAt,
+    User? patientUser,
+    Doctor? doctor,
+  }) {
+    return Appointment(
+      id: id ?? this.id,
+      patientId: patientId ?? this.patientId,
+      doctorId: doctorId ?? this.doctorId,
+      date: date ?? this.date,
+      time: time ?? this.time,
+      reason: reason ?? this.reason,
+      status: status ?? this.status,
+      notes: notes ?? this.notes,
+      nextVisit: nextVisit ?? this.nextVisit,
+      createdAt: createdAt ?? this.createdAt,
+      patientUser: patientUser ?? this.patientUser,
+      doctor: doctor ?? this.doctor,
+    );
+  }
+}
+
+class Prescription {
+  final int? id;
+  final int appointmentId;
+  final String medicine;
+
+  Prescription({
+    this.id,
+    required this.appointmentId,
+    required this.medicine,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      if (id != null) 'id': id,
+      'appointment_id': appointmentId,
+      'medicine': medicine,
+    };
+  }
+
+  factory Prescription.fromMap(Map<String, dynamic> map) {
+    return Prescription(
+      id: map['id'] as int?,
+      appointmentId: map['appointment_id'] as int,
+      medicine: map['medicine'] as String,
+    );
+  }
+}
+
+class Review {
+  final int? id;
+  final int appointmentId;
+  final int patientId;
+  final int doctorId;
+  final int rating; // 1-5
+  final String? tags;
+  final String? comment;
+  final String createdAt;
+  final User? patientUser;
+
+  Review({
+    this.id,
+    required this.appointmentId,
+    required this.patientId,
+    required this.doctorId,
+    required this.rating,
+    this.tags,
+    this.comment,
+    required this.createdAt,
+    this.patientUser,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      if (id != null) 'id': id,
+      'appointment_id': appointmentId,
+      'patient_id': patientId,
+      'doctor_id': doctorId,
+      'rating': rating,
+      'tags': tags,
+      'comment': comment,
+      'created_at': createdAt,
+    };
+  }
+
+  factory Review.fromMap(Map<String, dynamic> map, {User? patientUser}) {
+    return Review(
+      id: map['id'] as int?,
+      appointmentId: map['appointment_id'] as int,
+      patientId: map['patient_id'] as int,
+      doctorId: map['doctor_id'] as int,
+      rating: map['rating'] as int,
+      tags: map['tags'] as String?,
+      comment: map['comment'] as String?,
+      createdAt: map['created_at'] as String,
+      patientUser: patientUser,
+    );
+  }
+}
+
+class AppNotification {
+  final int? id;
+  final int userId;
+  final String type;
+  final String title;
+  final String body;
+  final int isRead; // 0 or 1
+  final String createdAt;
+
+  AppNotification({
+    this.id,
+    required this.userId,
+    required this.type,
+    required this.title,
+    required this.body,
+    this.isRead = 0,
+    required this.createdAt,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      if (id != null) 'id': id,
+      'user_id': userId,
+      'type': type,
+      'title': title,
+      'body': body,
+      'is_read': isRead,
+      'created_at': createdAt,
+    };
+  }
+
+  factory AppNotification.fromMap(Map<String, dynamic> map) {
+    return AppNotification(
+      id: map['id'] as int?,
+      userId: map['user_id'] as int,
+      type: map['type'] as String,
+      title: map['title'] as String,
+      body: map['body'] as String,
+      isRead: (map['is_read'] as int?) ?? 0,
+      createdAt: map['created_at'] as String,
+    );
+  }
+
+  AppNotification copyWith({
+    int? id,
+    int? userId,
+    String? type,
+    String? title,
+    String? body,
+    int? isRead,
+    String? createdAt,
+  }) {
+    return AppNotification(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      type: type ?? this.type,
+      title: title ?? this.title,
+      body: body ?? this.body,
+      isRead: isRead ?? this.isRead,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+}

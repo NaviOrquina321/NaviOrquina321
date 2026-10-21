@@ -1,0 +1,182 @@
+import 'package:flutter/material.dart';
+import '../data/models/models.dart';
+import '../data/repositories/appointment_repository.dart';
+
+class AppointmentProvider extends ChangeNotifier {
+  final AppointmentRepository appointmentRepository;
+
+  List<Appointment> _upcomingAppointments = [];
+  List<Appointment> _pastAppointments = [];
+  List<Appointment> _doctorAppointments = [];
+  Appointment? _selectedAppointment;
+  List<Prescription> _selectedPrescriptions = [];
+  List<String> _bookedSlots = [];
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  AppointmentProvider({AppointmentRepository? appointmentRepository})
+      : appointmentRepository = appointmentRepository ?? AppointmentRepository();
+
+  List<Appointment> get upcomingAppointments => _upcomingAppointments;
+  List<Appointment> get pastAppointments => _pastAppointments;
+  List<Appointment> get doctorAppointments => _doctorAppointments;
+  Appointment? get selectedAppointment => _selectedAppointment;
+  List<Prescription> get selectedPrescriptions => _selectedPrescriptions;
+  List<String> get bookedSlots => _bookedSlots;
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+
+  Appointment? get nextUpcomingAppointment {
+    if (_upcomingAppointments.isEmpty) return null;
+    final confirmed = _upcomingAppointments.where((a) => a.status == 'confirmed').toList();
+    if (confirmed.isEmpty) return null;
+    return confirmed.first;
+  }
+
+  Future<void> fetchPatientAppointments(int patientId) async {
+    _setLoading(true);
+    try {
+      _upcomingAppointments = await appointmentRepository.getPatientAppointments(patientId, past: false);
+      _pastAppointments = await appointmentRepository.getPatientAppointments(patientId, past: true);
+      _setLoading(false);
+    } catch (e) {
+      _errorMessage = e.toString();
+      _setLoading(false);
+    }
+  }
+
+  Future<void> fetchDoctorAppointments(int doctorId, {String? dateFilter, String? filterType}) async {
+    _setLoading(true);
+    try {
+      _doctorAppointments = await appointmentRepository.getDoctorAppointments(
+        doctorId,
+        dateFilter: dateFilter,
+        filterType: filterType,
+      );
+      _setLoading(false);
+    } catch (e) {
+      _errorMessage = e.toString();
+      _setLoading(false);
+    }
+  }
+
+  Future<void> fetchAppointmentDetails(int appointmentId) async {
+    _setLoading(true);
+    try {
+      _selectedAppointment = await appointmentRepository.getAppointmentById(appointmentId);
+      _selectedPrescriptions = await appointmentRepository.getPrescriptionsForAppointment(appointmentId);
+      _setLoading(false);
+    } catch (e) {
+      _errorMessage = e.toString();
+      _setLoading(false);
+    }
+  }
+
+  Future<void> fetchBookedSlots(int doctorId, String date) async {
+    try {
+      _bookedSlots = await appointmentRepository.getBookedSlotsForDoctorAndDate(doctorId, date);
+      notifyListeners();
+    } catch (_) {
+      _bookedSlots = [];
+      notifyListeners();
+    }
+  }
+
+  Future<Appointment?> bookAppointment({
+    required int patientId,
+    required int doctorId,
+    required String date,
+    required String time,
+    String? reason,
+  }) async {
+    _setLoading(true);
+    _errorMessage = null;
+    try {
+      final appt = await appointmentRepository.createAppointment(
+        patientId: patientId,
+        doctorId: doctorId,
+        date: date,
+        time: time,
+        reason: reason,
+      );
+      _setLoading(false);
+      return appt;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _setLoading(false);
+      return null;
+    }
+  }
+
+  Future<bool> updateStatus({
+    required int appointmentId,
+    required String status,
+    required int notifyUserId,
+    required String notificationTitle,
+    required String notificationBody,
+  }) async {
+    _setLoading(true);
+    try {
+      await appointmentRepository.updateAppointmentStatus(
+        appointmentId,
+        status,
+        notifyUserId: notifyUserId,
+        notificationTitle: notificationTitle,
+        notificationBody: notificationBody,
+      );
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  Future<bool> rescheduleAppointment(int appointmentId, String date, String time) async {
+    _setLoading(true);
+    _errorMessage = null;
+    try {
+      await appointmentRepository.rescheduleAppointment(appointmentId, date, time);
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  Future<bool> completeConsultation({
+    required int appointmentId,
+    required String notes,
+    required List<String> medicines,
+    String? nextVisit,
+  }) async {
+    _setLoading(true);
+    try {
+      await appointmentRepository.completeConsultation(
+        appointmentId: appointmentId,
+        notes: notes,
+        medicines: medicines,
+        nextVisit: nextVisit,
+      );
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  void _setLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
+  }
+
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
+  }
+}
