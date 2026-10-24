@@ -66,15 +66,22 @@ class DoctorProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> updateDoctorProfile(int doctorId, {String? specialty, String? room, String? bio}) async {
+  Future<bool> updateDoctorProfile(int doctorId, {String? specialty, String? room, String? bio, bool? autoConfirm}) async {
     _setLoading(true);
     try {
-      await doctorRepository.updateDoctorProfile(doctorId, specialty: specialty, room: room, bio: bio);
+      await doctorRepository.updateDoctorProfile(
+        doctorId,
+        specialty: specialty,
+        room: room,
+        bio: bio,
+        autoConfirm: autoConfirm,
+      );
       if (_currentDoctorProfile != null && _currentDoctorProfile!.id == doctorId) {
         _currentDoctorProfile = _currentDoctorProfile!.copyWith(
           specialty: specialty,
           room: room,
           bio: bio,
+          autoConfirm: autoConfirm != null ? (autoConfirm ? 1 : 0) : null,
         );
       }
       _setLoading(false);

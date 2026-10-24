@@ -198,9 +198,7 @@ class _DoctorProfileAccountScreenState extends State<DoctorProfileAccountScreen>
                         onChanged: (val) async {
                           await docProvider.updateDoctorProfile(
                             doc.id!,
-                            specialty: doc.specialty,
-                            room: doc.room,
-                            bio: doc.bio,
+                            autoConfirm: val,
                           );
                           _loadProfile();
                         },

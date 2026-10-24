@@ -20,8 +20,13 @@ import 'routes.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  if (kIsWeb) {
+    runApp(const WebNotSupportedApp());
+    return;
+  }
+
   // Desktop FFI initialization
-  if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.windows || defaultTargetPlatform == TargetPlatform.linux || defaultTargetPlatform == TargetPlatform.macOS)) {
+  if (defaultTargetPlatform == TargetPlatform.windows || defaultTargetPlatform == TargetPlatform.linux || defaultTargetPlatform == TargetPlatform.macOS) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
@@ -30,6 +35,43 @@ void main() async {
   await DatabaseHelper.instance.database;
 
   runApp(const DoctorAppointmentApp());
+}
+
+class WebNotSupportedApp extends StatelessWidget {
+  const WebNotSupportedApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        backgroundColor: const Color(0xFFF5F8FD),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.phonelink_off, size: 64, color: Color(0xFF1565C0)),
+                SizedBox(height: 16),
+                Text(
+                  'Web Platform Not Supported',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF0B3470)),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 12),
+                Text(
+                  'This app uses native SQLite (sqflite).\n\nPlease run the application on Android, iOS, or Desktop (Windows / macOS / Linux).\n\nExample command:\nflutter run -d windows (or macos / linux / android)',
+                  style: TextStyle(fontSize: 14, color: Color(0xFF4A5F7D)),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class DoctorAppointmentApp extends StatelessWidget {

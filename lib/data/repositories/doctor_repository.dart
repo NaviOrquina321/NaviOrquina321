@@ -107,12 +107,13 @@ class DoctorRepository {
     return results.map((r) => r['specialty'] as String).toList();
   }
 
-  Future<void> updateDoctorProfile(int doctorId, {String? specialty, String? room, String? bio}) async {
+  Future<void> updateDoctorProfile(int doctorId, {String? specialty, String? room, String? bio, bool? autoConfirm}) async {
     final db = await dbHelper.database;
     final Map<String, dynamic> updates = {};
     if (specialty != null) updates['specialty'] = specialty;
     if (room != null) updates['room'] = room;
     if (bio != null) updates['bio'] = bio;
+    if (autoConfirm != null) updates['auto_confirm'] = autoConfirm ? 1 : 0;
 
     if (updates.isNotEmpty) {
       await db.update('doctors', updates, where: 'id = ?', whereArgs: [doctorId]);
