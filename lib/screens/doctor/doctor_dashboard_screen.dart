@@ -8,6 +8,7 @@ import '../../core/widgets/avatar_initials.dart';
 import '../../core/widgets/bottom_nav.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/status_pill.dart';
+import '../../data/models/models.dart';
 import '../../providers/appointment_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/doctor_provider.dart';
@@ -63,12 +64,9 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     final pendingCount = appointments.where((a) => a.status == 'pending').length;
     final completedCount = appointments.where((a) => a.status == 'completed').length;
 
-    final nextPatient = appointments.firstWhere(
-      (a) => a.status == 'confirmed' || a.status == 'in_progress',
-      orElse: () => appointments.isNotEmpty ? appointments.first : appointments.first,
-    );
-
-    final hasNextPatient = appointments.isNotEmpty;
+    final confirmedOrInProgress = appointments.where((a) => a.status == 'confirmed' || a.status == 'in_progress').toList();
+    final Appointment? nextPatient = confirmedOrInProgress.isNotEmpty ? confirmedOrInProgress.first : null;
+    final hasNextPatient = nextPatient != null;
 
     return Scaffold(
       backgroundColor: AppColors.background,

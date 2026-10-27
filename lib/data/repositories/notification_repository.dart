@@ -47,4 +47,13 @@ class NotificationRepository {
       whereArgs: [userId],
     );
   }
+
+  Future<void> clearAllNotifications(int userId) async {
+    final db = await dbHelper.database;
+    await db.delete(
+      'notifications',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+    );
+  }
 }

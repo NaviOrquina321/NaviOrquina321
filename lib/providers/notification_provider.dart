@@ -44,6 +44,13 @@ class NotificationProvider extends ChangeNotifier {
     } catch (_) {}
   }
 
+  Future<void> clearAllNotifications(int userId) async {
+    try {
+      await notificationRepository.clearAllNotifications(userId);
+      await fetchNotifications(userId);
+    } catch (_) {}
+  }
+
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();

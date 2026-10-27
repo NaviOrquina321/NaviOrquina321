@@ -124,62 +124,72 @@ class _DoctorPatientsScreenState extends State<DoctorPatientsScreen> {
             const SizedBox(height: 16),
 
             Expanded(
-              child: apptProvider.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : filteredAppointments.isEmpty
-                      ? const EmptyState(
-                          icon: Icons.people_outline,
-                          title: 'No Patients Found',
-                          description: 'No patient visits match your search criteria.',
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          itemCount: filteredAppointments.length,
-                          itemBuilder: (context, index) {
-                            final appt = filteredAppointments[index];
-
-                            return Card(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              child: ListTile(
-                                leading: AvatarInitials(
-                                  name: appt.patientUser?.fullName ?? 'Patient',
-                                  radius: 24,
-                                ),
-                                title: Text(
-                                  appt.patientUser?.fullName ?? 'Patient',
-                                  style: const TextStyle(
-                                    color: AppColors.navy,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Last visit: ${appt.reason ?? 'General'}',
-                                      style: const TextStyle(color: AppColors.muted, fontSize: 13),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      DateTimeUtils.formatDateAndSlot(appt.date, appt.time),
-                                      style: const TextStyle(color: AppColors.blue, fontSize: 12, fontWeight: FontWeight.w600),
-                                    ),
-                                  ],
-                                ),
-                                trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
-                                onTap: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    RouteNames.doctorConsultation,
-                                    arguments: appt.id,
-                                  );
-                                },
+              child: RefreshIndicator(
+                onRefresh: () async => _loadPatients(),
+                child: apptProvider.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : filteredAppointments.isEmpty
+                        ? SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: Container(
+                              height: MediaQuery.of(context).size.height * 0.5,
+                              alignment: Alignment.center,
+                              child: const EmptyState(
+                                icon: Icons.people_outline,
+                                title: 'No Patients Found',
+                                description: 'No patient visits match your search criteria.',
                               ),
-                            );
-                          },
-                        ),
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            itemCount: filteredAppointments.length,
+                            itemBuilder: (context, index) {
+                              final appt = filteredAppointments[index];
+
+                              return Card(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                child: ListTile(
+                                  leading: AvatarInitials(
+                                    name: appt.patientUser?.fullName ?? 'Patient',
+                                    radius: 24,
+                                  ),
+                                  title: Text(
+                                    appt.patientUser?.fullName ?? 'Patient',
+                                    style: const TextStyle(
+                                      color: AppColors.navy,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Last visit: ${appt.reason ?? 'General'}',
+                                        style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        DateTimeUtils.formatDateAndSlot(appt.date, appt.time),
+                                        style: const TextStyle(color: AppColors.blue, fontSize: 12, fontWeight: FontWeight.w600),
+                                      ),
+                                    ],
+                                  ),
+                                  trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
+                                  onTap: () {
+                                    Navigator.pushNamed(
+                                      context,
+                                      RouteNames.doctorConsultation,
+                                      arguments: appt.id,
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+              ),
             ),
           ],
         ),

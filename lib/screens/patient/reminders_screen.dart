@@ -37,25 +37,52 @@ class _RemindersScreenState extends State<RemindersScreen> {
       appBar: AppBar(
         title: const Text('Reminders & Notifications'),
         actions: [
-          if (notificationProvider.unreadCount > 0 && userId != null)
-            TextButton(
-              onPressed: () {
-                notificationProvider.markAllAsRead(userId);
+          if (notificationProvider.notifications.isNotEmpty && userId != null)
+            PopupMenuButton<String>(
+              onSelected: (val) {
+                if (val == 'read') {
+                  notificationProvider.markAllAsRead(userId);
+                } else if (val == 'clear') {
+                  notificationProvider.clearAllNotifications(userId);
+                }
               },
-              child: const Text('Mark all as read', style: TextStyle(color: AppColors.blue)),
+              itemBuilder: (ctx) => [
+                if (notificationProvider.unreadCount > 0)
+                  const PopupMenuItem(
+                    value: 'read',
+                    child: Text('Mark all as read'),
+                  ),
+                const PopupMenuItem(
+                  value: 'clear',
+                  child: Text('Clear all notifications', style: TextStyle(color: AppColors.danger)),
+                ),
+              ],
             ),
         ],
       ),
       body: SafeArea(
-        child: notificationProvider.isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : notificationProvider.notifications.isEmpty
-                ? const EmptyState(
-                    icon: Icons.notifications_none_outlined,
-                    title: 'No Notifications',
-                    description: 'You have no active reminders or notifications.',
-                  )
-                : ListView.separated(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            if (userId != null) {
+              await notificationProvider.fetchNotifications(userId);
+            }
+          },
+          child: notificationProvider.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : notificationProvider.notifications.isEmpty
+                  ? SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Container(
+                        height: MediaQuery.of(context).size.height * 0.6,
+                        alignment: Alignment.center,
+                        child: const EmptyState(
+                          icon: Icons.notifications_none_outlined,
+                          title: 'No Notifications',
+                          description: 'You have no active reminders or notifications.',
+                        ),
+                      ),
+                    )
+                  : ListView.separated(
                     padding: const EdgeInsets.all(20),
                     itemCount: notificationProvider.notifications.length,
                     separatorBuilder: (context, index) => const SizedBox(height: 10),
@@ -131,6 +158,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                       );
                     },
                   ),
+        ),
       ),
     );
   }

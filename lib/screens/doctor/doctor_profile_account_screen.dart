@@ -247,12 +247,36 @@ class _DoctorProfileAccountScreenState extends State<DoctorProfileAccountScreen>
                 text: 'Sign out',
                 isDanger: true,
                 onPressed: () async {
-                  final navigator = Navigator.of(context);
-                  await authProvider.logout();
-                  navigator.pushNamedAndRemoveUntil(
-                    RouteNames.login,
-                    (route) => false,
+                  final nav = Navigator.of(context);
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('Sign Out'),
+                      content: const Text('Are you sure you want to sign out?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('Cancel'),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.danger,
+                            foregroundColor: AppColors.white,
+                          ),
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text('Sign Out'),
+                        ),
+                      ],
+                    ),
                   );
+
+                  if (confirm == true) {
+                    await authProvider.logout();
+                    nav.pushNamedAndRemoveUntil(
+                      RouteNames.login,
+                      (route) => false,
+                    );
+                  }
                 },
               ),
             ],

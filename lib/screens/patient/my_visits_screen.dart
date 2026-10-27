@@ -128,73 +128,83 @@ class _MyVisitsScreenState extends State<MyVisitsScreen> {
             ),
 
             Expanded(
-              child: apptProvider.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : list.isEmpty
-                      ? EmptyState(
-                          title: _showPast ? 'No Past Visits' : 'No Upcoming Visits',
-                          description: _showPast
-                              ? 'You have not completed any medical visits yet.'
-                              : 'You have no scheduled medical appointments.',
-                          buttonText: 'Book appointment',
-                          onButtonPressed: () {
-                            Navigator.pushNamed(context, RouteNames.patientDoctors);
-                          },
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          itemCount: list.length,
-                          itemBuilder: (context, index) {
-                            final appt = list[index];
-                            final isCompleted = appt.status == 'completed';
-                            final isReviewed = appt.id != null && (_reviewedMap[appt.id!] ?? false);
+              child: RefreshIndicator(
+                onRefresh: () async => _loadVisits(),
+                child: apptProvider.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : list.isEmpty
+                        ? SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: Container(
+                              height: MediaQuery.of(context).size.height * 0.5,
+                              alignment: Alignment.center,
+                              child: EmptyState(
+                                title: _showPast ? 'No Past Visits' : 'No Upcoming Visits',
+                                description: _showPast
+                                    ? 'You have not completed any medical visits yet.'
+                                    : 'You have no scheduled medical appointments.',
+                                buttonText: 'Book appointment',
+                                onButtonPressed: () {
+                                  Navigator.pushNamed(context, RouteNames.patientDoctors);
+                                },
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            itemCount: list.length,
+                            itemBuilder: (context, index) {
+                              final appt = list[index];
+                              final isCompleted = appt.status == 'completed';
+                              final isReviewed = appt.id != null && (_reviewedMap[appt.id!] ?? false);
 
-                            return AppointmentCard(
-                              doctorName: appt.doctor?.user?.fullName ?? 'Dr. Medical',
-                              specialty: appt.doctor?.specialty ?? 'General',
-                              date: appt.date,
-                              time: appt.time,
-                              status: appt.status,
-                              onTap: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  RouteNames.visitDetails,
-                                  arguments: appt.id,
-                                );
-                              },
-                              onRescheduleTap: !_showPast && (appt.status == 'confirmed' || appt.status == 'pending')
-                                  ? () {
-                                      Navigator.pushNamed(
-                                        context,
-                                        RouteNames.bookAppointment,
-                                        arguments: {
-                                          'doctorId': appt.doctorId,
-                                          'rescheduleAppointmentId': appt.id,
-                                        },
-                                      );
-                                    }
-                                  : null,
-                              onCancelTap: !_showPast && (appt.status == 'confirmed' || appt.status == 'pending')
-                                  ? () {
-                                      Navigator.pushNamed(
-                                        context,
-                                        RouteNames.visitDetails,
-                                        arguments: appt.id,
-                                      );
-                                    }
-                                  : null,
-                              onRateTap: _showPast && isCompleted && !isReviewed
-                                  ? () {
-                                      Navigator.pushNamed(
-                                        context,
-                                        RouteNames.rateVisit,
-                                        arguments: appt.id,
-                                      ).then((_) => _loadVisits());
-                                    }
-                                  : null,
-                            );
-                          },
-                        ),
+                              return AppointmentCard(
+                                doctorName: appt.doctor?.user?.fullName ?? 'Dr. Medical',
+                                specialty: appt.doctor?.specialty ?? 'General',
+                                date: appt.date,
+                                time: appt.time,
+                                status: appt.status,
+                                onTap: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    RouteNames.visitDetails,
+                                    arguments: appt.id,
+                                  );
+                                },
+                                onRescheduleTap: !_showPast && (appt.status == 'confirmed' || appt.status == 'pending')
+                                    ? () {
+                                        Navigator.pushNamed(
+                                          context,
+                                          RouteNames.bookAppointment,
+                                          arguments: {
+                                            'doctorId': appt.doctorId,
+                                            'rescheduleAppointmentId': appt.id,
+                                          },
+                                        );
+                                      }
+                                    : null,
+                                onCancelTap: !_showPast && (appt.status == 'confirmed' || appt.status == 'pending')
+                                    ? () {
+                                        Navigator.pushNamed(
+                                          context,
+                                          RouteNames.visitDetails,
+                                          arguments: appt.id,
+                                        );
+                                      }
+                                    : null,
+                                onRateTap: _showPast && isCompleted && !isReviewed
+                                    ? () {
+                                        Navigator.pushNamed(
+                                          context,
+                                          RouteNames.rateVisit,
+                                          arguments: appt.id,
+                                        ).then((_) => _loadVisits());
+                                      }
+                                    : null,
+                              );
+                            },
+                          ),
+              ),
             ),
           ],
         ),
