@@ -4,7 +4,8 @@ class RouteNames {
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
 
-  // Onboarding Routes
+  // Onboarding & Signup Wizard Routes
+  static const String signupWizard = '/signup-wizard';
   static const String patientOnboarding = '/onboarding/patient';
   static const String doctorOnboarding = '/onboarding/doctor';
 

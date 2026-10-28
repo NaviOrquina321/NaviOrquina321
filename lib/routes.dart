@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'core/constants/route_names.dart';
 import 'screens/auth/forgot_password_screen.dart';
 import 'screens/auth/login_screen.dart';
-import 'screens/auth/register_screen.dart';
 import 'screens/auth/welcome_screen.dart';
 import 'screens/doctor/doctor_availability_screen.dart';
 import 'screens/doctor/doctor_consultation_screen.dart';
@@ -35,6 +34,7 @@ import 'screens/shared/report_problem_screen.dart';
 import 'screens/shared/settings_screen.dart';
 import 'screens/shared/support_chat_screen.dart';
 import 'screens/shared/video_call_screen.dart';
+import 'screens/signup/signup_wizard_screen.dart';
 
 class AppRoutes {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -42,9 +42,14 @@ class AppRoutes {
       case RouteNames.welcome:
         return MaterialPageRoute(builder: (_) => const WelcomeScreen());
       case RouteNames.login:
-        return MaterialPageRoute(builder: (_) => const LoginScreen());
+        final args = settings.arguments as Map<String, dynamic>?;
+        final isPatient = args != null && args['role'] == 'doctor' ? false : true;
+        return MaterialPageRoute(builder: (_) => LoginScreen(initialIsPatient: isPatient));
       case RouteNames.register:
-        return MaterialPageRoute(builder: (_) => const RegisterScreen());
+      case RouteNames.signupWizard:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final initialRole = args != null && args['role'] == 'doctor' ? 'doctor' : 'patient';
+        return MaterialPageRoute(builder: (_) => SignupWizardScreen(initialRole: initialRole));
       case RouteNames.forgotPassword:
         return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
 

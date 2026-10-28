@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/app_utils.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_text_field.dart';
-import '../../core/widgets/avatar_initials.dart';
 import '../../core/widgets/bottom_nav.dart';
 import '../../core/widgets/switch_row.dart';
+import '../../core/widgets/user_avatar.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/doctor_provider.dart';
 
@@ -78,6 +79,106 @@ class _DoctorProfileAccountScreenState extends State<DoctorProfileAccountScreen>
     }
   }
 
+  void _showChangePhotoSheet() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Profile Photo', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.navy)),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.photo_camera_rounded, color: AppColors.blue),
+                title: const Text('Take photo'),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final picker = ImagePicker();
+                  final img = await picker.pickImage(source: ImageSource.camera, maxWidth: 800, imageQuality: 80);
+                  if (img != null) {
+                    final ok = await authProvider.updatePhoto(img.path);
+                    if (mounted && ok) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile photo updated.')));
+                    }
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_rounded, color: AppColors.blue),
+                title: const Text('Choose from gallery'),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final picker = ImagePicker();
+                  final img = await picker.pickImage(source: ImageSource.gallery, maxWidth: 800, imageQuality: 80);
+                  if (img != null) {
+                    final ok = await authProvider.updatePhoto(img.path);
+                    if (mounted && ok) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile photo updated.')));
+                    }
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showSignOutDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        contentPadding: const EdgeInsets.all(24),
+        title: const Text(
+          'Sign out?',
+          style: TextStyle(color: AppColors.navy, fontWeight: FontWeight.bold, fontSize: 20),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "You'll need to sign in again to see your visits.",
+              style: TextStyle(color: AppColors.muted, fontSize: 14),
+            ),
+            const SizedBox(height: 20),
+            DangerButton(
+              text: 'Yes, sign out',
+              onPressed: () async {
+                final nav = Navigator.of(context);
+                final messenger = ScaffoldMessenger.of(context);
+                nav.pop();
+
+                final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                await authProvider.logout();
+
+                messenger.showSnackBar(
+                  const SnackBar(content: Text("You've been signed out.")),
+                );
+
+                nav.pushNamedAndRemoveUntil(
+                  RouteNames.login,
+                  (route) => false,
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            NeutralOutlinedButton(
+              text: 'Stay signed in',
+              onPressed: () => Navigator.pop(ctx),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
@@ -90,6 +191,7 @@ class _DoctorProfileAccountScreenState extends State<DoctorProfileAccountScreen>
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Doctor Profile'),
+        automaticallyImplyLeading: false,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -99,9 +201,27 @@ class _DoctorProfileAccountScreenState extends State<DoctorProfileAccountScreen>
               Center(
                 child: Column(
                   children: [
-                    AvatarInitials(
-                      name: user?.fullName ?? 'Doctor',
-                      radius: 40,
+                    Stack(
+                      children: [
+                        UserAvatar(
+                          photoPath: user?.photoPath,
+                          name: user?.fullName ?? 'Doctor',
+                          size: 80,
+                          onTap: _showChangePhotoSheet,
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: _showChangePhotoSheet,
+                            child: const CircleAvatar(
+                              radius: 14,
+                              backgroundColor: AppColors.blue,
+                              child: Icon(Icons.camera_alt_rounded, size: 14, color: AppColors.white),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -248,41 +368,9 @@ class _DoctorProfileAccountScreenState extends State<DoctorProfileAccountScreen>
               ],
 
               const SizedBox(height: 32),
-              AppButton(
+              DangerOutlinedButton(
                 text: 'Sign out',
-                isDanger: true,
-                onPressed: () async {
-                  final nav = Navigator.of(context);
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: const Text('Sign Out'),
-                      content: const Text('Are you sure you want to sign out?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, false),
-                          child: const Text('Cancel'),
-                        ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.danger,
-                            foregroundColor: AppColors.white,
-                          ),
-                          onPressed: () => Navigator.pop(ctx, true),
-                          child: const Text('Sign Out'),
-                        ),
-                      ],
-                    ),
-                  );
-
-                  if (confirm == true) {
-                    await authProvider.logout();
-                    nav.pushNamedAndRemoveUntil(
-                      RouteNames.login,
-                      (route) => false,
-                    );
-                  }
-                },
+                onPressed: _showSignOutDialog,
               ),
             ],
           ),

@@ -9,7 +9,9 @@ import '../../core/widgets/app_text_field.dart';
 import '../../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final bool initialIsPatient;
+
+  const LoginScreen({super.key, this.initialIsPatient = true});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -19,8 +21,14 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isPatientSelected = true;
+  late bool _isPatientSelected;
   bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _isPatientSelected = widget.initialIsPatient;
+  }
 
   @override
   void dispose() {
@@ -45,9 +53,9 @@ class _LoginScreenState extends State<LoginScreen> {
       if (success) {
         if (authProvider.currentUser?.profileCompleted == 0) {
           if (_isPatientSelected) {
-            Navigator.pushNamedAndRemoveUntil(context, RouteNames.patientOnboarding, (route) => false);
+            Navigator.pushNamedAndRemoveUntil(context, RouteNames.signupWizard, (route) => false, arguments: {'role': 'patient'});
           } else {
-            Navigator.pushNamedAndRemoveUntil(context, RouteNames.doctorOnboarding, (route) => false);
+            Navigator.pushNamedAndRemoveUntil(context, RouteNames.signupWizard, (route) => false, arguments: {'role': 'doctor'});
           }
         } else {
           if (_isPatientSelected) {
@@ -75,7 +83,8 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Sign In'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -86,6 +95,25 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Center(child: AppLogo(size: 100)),
+                const SizedBox(height: 16),
+                const Text(
+                  'Welcome back',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.navy,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Sign in as a patient or a doctor.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.muted,
+                  ),
+                ),
                 const SizedBox(height: 24),
 
                 // Role Segmented Control
@@ -223,7 +251,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 Center(
                   child: TextLinkButton(
+                    text: 'New here? Create an account',
+                    onPressed: () {
+                      Navigator.pushNamed(
+                        context,
+                        RouteNames.signupWizard,
+                        arguments: {'role': _isPatientSelected ? 'patient' : 'doctor'},
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                Center(
+                  child: TextLinkButton(
                     text: 'Need help?',
+                    color: AppColors.muted,
                     onPressed: () {
                       Navigator.pushNamed(context, RouteNames.helpSupport);
                     },

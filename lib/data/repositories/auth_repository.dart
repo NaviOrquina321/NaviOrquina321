@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'dart:math';
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import '../db/database_helper.dart';
 import '../models/models.dart';
@@ -20,6 +22,47 @@ class AuthRepository {
     final res = await db.query('users', where: 'id = ?', whereArgs: [userId]);
     if (res.isEmpty) return null;
     return User.fromMap(res.first);
+  }
+
+  Future<void> updateProfilePhoto(int userId, String? localSourcePath) async {
+    final db = await dbHelper.database;
+    final userRes = await db.query('users', where: 'id = ?', whereArgs: [userId]);
+    if (userRes.isEmpty) return;
+
+    final existingPhoto = userRes.first['photo_path'] as String?;
+    final docsDir = await getApplicationDocumentsDirectory();
+
+    // Delete existing photo file if present
+    if (existingPhoto != null && existingPhoto.isNotEmpty) {
+      final oldFile = File('${docsDir.path}/$existingPhoto');
+      if (oldFile.existsSync()) {
+        try {
+          oldFile.deleteSync();
+        } catch (_) {}
+      }
+    }
+
+    String? savedFileName;
+    if (localSourcePath != null && localSourcePath.isNotEmpty) {
+      final sourceFile = File(localSourcePath);
+      if (sourceFile.existsSync()) {
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        savedFileName = 'profile_${userId}_$timestamp.jpg';
+        final targetPath = '${docsDir.path}/$savedFileName';
+        await sourceFile.copy(targetPath);
+      }
+    }
+
+    final nowIso = DateTime.now().toIso8601String();
+    await db.update(
+      'users',
+      {
+        'photo_path': savedFileName,
+        'photo_updated_at': nowIso,
+      },
+      where: 'id = ?',
+      whereArgs: [userId],
+    );
   }
 
   Future<User?> login(String email, String password, String expectedRole) async {

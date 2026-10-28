@@ -36,6 +36,21 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> updatePhoto(String? localSourcePath) async {
+    if (_currentUser?.id == null) return false;
+    _setLoading(true);
+    try {
+      await authRepository.updateProfilePhoto(_currentUser!.id!, localSourcePath);
+      await refreshCurrentUser();
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _setLoading(false);
+      return false;
+    }
+  }
+
   Future<bool> tryAutoLogin() async {
     _setLoading(true);
     try {
