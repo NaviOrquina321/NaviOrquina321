@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import 'app_button.dart';
 import 'avatar_initials.dart';
 
 class DoctorCard extends StatelessWidget {
@@ -82,22 +83,10 @@ class DoctorCard extends StatelessWidget {
                 ),
               ),
               if (onBookTap != null)
-                ElevatedButton(
+                SmallButton(
+                  text: 'Book',
+                  variant: SmallButtonVariant.primary,
                   onPressed: onBookTap,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.tint,
-                    foregroundColor: AppColors.blue,
-                    elevation: 0,
-                    minimumSize: const Size(64, 36),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text(
-                    'Book',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                  ),
                 ),
             ],
           ),

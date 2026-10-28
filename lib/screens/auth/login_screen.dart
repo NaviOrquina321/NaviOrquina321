@@ -215,22 +215,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 Align(
                   alignment: Alignment.centerRight,
-                  child: TextButton(
+                  child: TextLinkButton(
+                    text: 'Forgot password?',
                     onPressed: () {
                       Navigator.pushNamed(context, RouteNames.forgotPassword);
                     },
-                    child: const Text(
-                      'Forgot password?',
-                      style: TextStyle(
-                        color: AppColors.blue,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
                   ),
                 ),
                 const SizedBox(height: 24),
 
-                AppButton(
+                PrimaryButton(
                   text: _isPatientSelected ? 'Sign in as patient' : 'Sign in as doctor',
                   isLoading: authProvider.isLoading,
                   onPressed: _handleLogin,
@@ -238,15 +232,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 16),
 
                 Center(
-                  child: TextButton.icon(
-                    icon: const Icon(Icons.help_outline_rounded, size: 18, color: AppColors.blue),
-                    label: const Text(
-                      'Need help?',
-                      style: TextStyle(
-                        color: AppColors.blue,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                  child: TextLinkButton(
+                    text: 'Need help?',
                     onPressed: () {
                       Navigator.pushNamed(context, RouteNames.helpSupport);
                     },

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../utils/app_utils.dart';
+import 'app_button.dart';
 import 'avatar_initials.dart';
 import 'status_pill.dart';
 
@@ -101,43 +102,28 @@ class AppointmentCard extends StatelessWidget {
                   children: [
                     if (onRescheduleTap != null)
                       Expanded(
-                        child: OutlinedButton(
+                        child: SmallButton(
+                          text: 'Reschedule',
+                          variant: SmallButtonVariant.secondary,
                           onPressed: onRescheduleTap,
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: AppColors.blue),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: const Text('Reschedule', style: TextStyle(color: AppColors.blue)),
                         ),
                       ),
                     if (onRescheduleTap != null && onCancelTap != null)
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 12),
                     if (onCancelTap != null)
                       Expanded(
-                        child: OutlinedButton(
+                        child: SmallButton(
+                          text: 'Cancel',
+                          variant: SmallButtonVariant.dangerOutlined,
                           onPressed: onCancelTap,
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: AppColors.danger),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: const Text('Cancel', style: TextStyle(color: AppColors.danger)),
                         ),
                       ),
                     if (onRateTap != null)
                       Expanded(
-                        child: ElevatedButton(
+                        child: SmallButton(
+                          text: 'Rate Visit',
+                          variant: SmallButtonVariant.primary,
                           onPressed: onRateTap,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.blue,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: const Text('Rate Visit', style: TextStyle(color: AppColors.white)),
                         ),
                       ),
                   ],

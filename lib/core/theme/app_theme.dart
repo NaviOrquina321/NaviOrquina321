@@ -9,7 +9,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       scaffoldBackgroundColor: AppColors.background,
-      colorScheme: ColorScheme.light(
+      colorScheme: const ColorScheme.light(
         primary: AppColors.blue,
         onPrimary: AppColors.white,
         secondary: AppColors.navy,
@@ -97,14 +97,40 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.blue,
           foregroundColor: AppColors.white,
-          minimumSize: const Size.fromHeight(50),
+          disabledBackgroundColor: const Color(0xFFD5DEEC),
+          disabledForegroundColor: AppColors.muted,
+          minimumSize: const Size.fromHeight(52),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(18),
           ),
           elevation: 0,
           textStyle: const TextStyle(
             fontSize: 16,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.blue,
+          minimumSize: const Size.fromHeight(52),
+          side: const BorderSide(color: AppColors.blue, width: 1.5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.blue,
+          minimumSize: const Size(48, 48),
+          textStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),

@@ -45,41 +45,42 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen> {
             'Are you sure you want to cancel this appointment? This action cannot be undone.',
             style: TextStyle(color: AppColors.muted),
           ),
+          actionsPadding: const EdgeInsets.all(16),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Keep appointment', style: TextStyle(color: AppColors.muted)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.danger,
-                foregroundColor: AppColors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-              onPressed: () async {
-                final navigator = Navigator.of(context);
-                final messenger = ScaffoldMessenger.of(context);
-                navigator.pop(); // Close dialog
+            Column(
+              children: [
+                DangerButton(
+                  text: 'Yes, cancel',
+                  onPressed: () async {
+                    final navigator = Navigator.of(context);
+                    final messenger = ScaffoldMessenger.of(context);
+                    navigator.pop(); // Close dialog
 
-                final authProvider = Provider.of<AuthProvider>(context, listen: false);
-                final patientName = authProvider.currentUser?.fullName ?? 'Patient';
+                    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                    final patientName = authProvider.currentUser?.fullName ?? 'Patient';
 
-                final success = await apptProvider.updateStatus(
-                  appointmentId: appt.id!,
-                  status: 'cancelled',
-                  notifyUserId: appt.doctor!.userId,
-                  notificationTitle: 'Appointment Cancelled',
-                  notificationBody: '$patientName has cancelled the appointment scheduled for ${appt.date} at ${appt.time}.',
-                );
+                    final success = await apptProvider.updateStatus(
+                      appointmentId: appt.id!,
+                      status: 'cancelled',
+                      notifyUserId: appt.doctor!.userId,
+                      notificationTitle: 'Appointment Cancelled',
+                      notificationBody: '$patientName has cancelled the appointment scheduled for ${appt.date} at ${appt.time}.',
+                    );
 
-                if (success) {
-                  messenger.showSnackBar(
-                    const SnackBar(content: Text('Appointment cancelled.')),
-                  );
-                  navigator.pop(); // Go back to My Visits
-                }
-              },
-              child: const Text('Yes, cancel'),
+                    if (success) {
+                      messenger.showSnackBar(
+                        const SnackBar(content: Text('Appointment cancelled.')),
+                      );
+                      navigator.pop(); // Go back to My Visits
+                    }
+                  },
+                ),
+                const SizedBox(height: 8),
+                NeutralOutlinedButton(
+                  text: 'Keep appointment',
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
             ),
           ],
         );
@@ -254,7 +255,7 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (appt.visitType == 'Video call' && (appt.status == 'confirmed' || appt.status == 'in_progress')) ...[
-                          AppButton(
+                          PrimaryButton(
                             text: 'Join video call',
                             icon: Icons.video_call_rounded,
                             onPressed: () {
@@ -268,7 +269,7 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen> {
                           const SizedBox(height: 8),
                         ],
                         if (appt.status == 'completed') ...[
-                          AppButton(
+                          PrimaryButton(
                             text: 'View summary',
                             icon: Icons.description_outlined,
                             onPressed: () {
@@ -283,9 +284,8 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen> {
                           Row(
                             children: [
                               Expanded(
-                                child: AppButton(
+                                child: SecondaryButton(
                                   text: 'Reschedule',
-                                  isSecondary: true,
                                   onPressed: () {
                                     Navigator.pushNamed(
                                       context,
@@ -300,9 +300,8 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen> {
                               ),
                               const SizedBox(width: 12),
                               Expanded(
-                                child: AppButton(
+                                child: DangerOutlinedButton(
                                   text: 'Cancel',
-                                  isDanger: true,
                                   onPressed: _showCancelDialog,
                                 ),
                               ),

@@ -216,7 +216,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                                   ],
                                 ),
                                 const SizedBox(height: 16),
-                                AppButton(
+                                PrimaryButton(
                                   text: 'Start consultation',
                                   onPressed: () async {
                                     final navigator = Navigator.of(context);
@@ -328,7 +328,9 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                                   Row(
                                     children: [
                                       Expanded(
-                                        child: ElevatedButton(
+                                        child: SmallButton(
+                                          text: 'Accept',
+                                          variant: SmallButtonVariant.primary,
                                           onPressed: () async {
                                             await apptProvider.updateStatus(
                                               appointmentId: appt.id!,
@@ -339,17 +341,13 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                                             );
                                             _loadDashboard();
                                           },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: AppColors.blue,
-                                            foregroundColor: AppColors.white,
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                          ),
-                                          child: const Text('Accept'),
                                         ),
                                       ),
-                                      const SizedBox(width: 10),
+                                      const SizedBox(width: 12),
                                       Expanded(
-                                        child: OutlinedButton(
+                                        child: SmallButton(
+                                          text: 'Decline',
+                                          variant: SmallButtonVariant.dangerOutlined,
                                           onPressed: () async {
                                             await apptProvider.updateStatus(
                                               appointmentId: appt.id!,
@@ -360,11 +358,6 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                                             );
                                             _loadDashboard();
                                           },
-                                          style: OutlinedButton.styleFrom(
-                                            side: const BorderSide(color: AppColors.danger),
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                          ),
-                                          child: const Text('Decline', style: TextStyle(color: AppColors.danger)),
                                         ),
                                       ),
                                     ],

@@ -68,16 +68,15 @@ class WelcomeScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const Spacer(),
-              AppButton(
+              PrimaryButton(
                 text: 'Get started',
                 onPressed: () {
                   Navigator.pushNamed(context, RouteNames.register);
                 },
               ),
               const SizedBox(height: 12),
-              AppButton(
+              SecondaryButton(
                 text: 'I already have an account',
-                isSecondary: true,
                 onPressed: () {
                   Navigator.pushNamed(context, RouteNames.login);
                 },
