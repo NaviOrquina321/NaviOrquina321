@@ -22,9 +22,10 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onConfigure: _onConfigure,
       onCreate: _createDB,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -155,8 +156,51 @@ class DatabaseHelper {
       )
     ''');
 
+    // Help & Support tables
+    await _createSupportTables(db);
+
     // Seed Data
     await _seedDatabase(db);
+  }
+
+  Future<void> _createSupportTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE support_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        text TEXT NOT NULL,
+        sender TEXT NOT NULL CHECK(sender IN ('user', 'support')),
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE support_tickets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        category TEXT NOT NULL,
+        description TEXT NOT NULL,
+        status TEXT DEFAULT 'open',
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE faq_feedback (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        faq_id TEXT NOT NULL,
+        user_id INTEGER NOT NULL,
+        helpful INTEGER NOT NULL,
+        UNIQUE(faq_id, user_id)
+      )
+    ''');
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await _createSupportTables(db);
+    }
   }
 
   static String hashPassword(String password, String salt) {

@@ -11,6 +11,13 @@ class DoctorProvider extends ChangeNotifier {
   Doctor? _currentDoctorProfile;
   bool _isLoading = false;
   String? _errorMessage;
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
 
   DoctorProvider({DoctorRepository? doctorRepository})
       : doctorRepository = doctorRepository ?? DoctorRepository();
@@ -40,7 +47,7 @@ class DoctorProvider extends ChangeNotifier {
     try {
       final list = await doctorRepository.getAllSpecialties();
       _specialties = ['All', ...list];
-      notifyListeners();
+      if (!_disposed) notifyListeners();
     } catch (_) {}
   }
 
@@ -95,6 +102,6 @@ class DoctorProvider extends ChangeNotifier {
 
   void _setLoading(bool value) {
     _isLoading = value;
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 }

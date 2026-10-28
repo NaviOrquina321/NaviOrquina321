@@ -11,6 +11,7 @@ class AppTextField extends StatelessWidget {
   final Widget? prefixIcon;
   final Widget? suffixIcon;
   final FocusNode? focusNode;
+  final int maxLines;
   final void Function(String)? onChanged;
 
   const AppTextField({
@@ -24,6 +25,7 @@ class AppTextField extends StatelessWidget {
     this.prefixIcon,
     this.suffixIcon,
     this.focusNode,
+    this.maxLines = 1,
     this.onChanged,
   });
 
@@ -47,6 +49,7 @@ class AppTextField extends StatelessWidget {
           obscureText: obscureText,
           keyboardType: keyboardType,
           focusNode: focusNode,
+          maxLines: maxLines,
           onChanged: onChanged,
           style: const TextStyle(color: AppColors.navy, fontSize: 15),
           decoration: InputDecoration(

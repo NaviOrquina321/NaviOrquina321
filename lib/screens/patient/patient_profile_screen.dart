@@ -184,9 +184,7 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                   Icons.help_outline,
                   'Help & support',
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Help & support placeholder.')),
-                    );
+                    Navigator.pushNamed(context, RouteNames.helpSupport);
                   },
                 ),
               ],

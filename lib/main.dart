@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
 import 'data/db/database_helper.dart';
 import 'data/repositories/appointment_repository.dart';
@@ -10,11 +11,13 @@ import 'data/repositories/auth_repository.dart';
 import 'data/repositories/availability_repository.dart';
 import 'data/repositories/doctor_repository.dart';
 import 'data/repositories/notification_repository.dart';
+import 'data/repositories/support_repository.dart';
 import 'providers/appointment_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/availability_provider.dart';
 import 'providers/doctor_provider.dart';
 import 'providers/notification_provider.dart';
+import 'providers/support_provider.dart';
 import 'routes.dart';
 
 void main() async {
@@ -86,6 +89,7 @@ class DoctorAppointmentApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AvailabilityProvider(availabilityRepository: AvailabilityRepository())),
         ChangeNotifierProvider(create: (_) => AppointmentProvider(appointmentRepository: AppointmentRepository())),
         ChangeNotifierProvider(create: (_) => NotificationProvider(notificationRepository: NotificationRepository())),
+        ChangeNotifierProvider(create: (_) => SupportProvider(supportRepository: SupportRepository())),
       ],
       child: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
@@ -113,7 +117,9 @@ class _SplashOrHomeScreenState extends State<SplashOrHomeScreen> {
   @override
   void initState() {
     super.initState();
-    _checkSession();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkSession();
+    });
   }
 
   Future<void> _checkSession() async {
@@ -135,9 +141,32 @@ class _SplashOrHomeScreenState extends State<SplashOrHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
+      backgroundColor: AppColors.background,
       body: Center(
-        child: CircularProgressIndicator(),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              height: 100,
+              width: 100,
+              decoration: const BoxDecoration(
+                color: AppColors.tint,
+                shape: BoxShape.circle,
+              ),
+              padding: const EdgeInsets.all(12),
+              child: Image.asset(
+                'assets/images/logo.png',
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.local_hospital_rounded, size: 48, color: AppColors.blue);
+                },
+              ),
+            ),
+            const SizedBox(height: 24),
+            const CircularProgressIndicator(),
+          ],
+        ),
       ),
     );
   }

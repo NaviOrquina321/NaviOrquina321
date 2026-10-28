@@ -19,6 +19,9 @@ import 'screens/patient/patient_profile_screen.dart';
 import 'screens/patient/rate_visit_screen.dart';
 import 'screens/patient/reminders_screen.dart';
 import 'screens/patient/visit_details_screen.dart';
+import 'screens/shared/help_support_screen.dart';
+import 'screens/shared/report_problem_screen.dart';
+import 'screens/shared/support_chat_screen.dart';
 
 class AppRoutes {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -81,6 +84,14 @@ class AppRoutes {
       case RouteNames.doctorConsultation:
         final apptId = settings.arguments as int;
         return MaterialPageRoute(builder: (_) => DoctorConsultationScreen(appointmentId: apptId));
+
+      // Shared Routes
+      case RouteNames.helpSupport:
+        return MaterialPageRoute(builder: (_) => const HelpSupportScreen());
+      case RouteNames.supportChat:
+        return MaterialPageRoute(builder: (_) => const SupportChatScreen());
+      case RouteNames.reportProblem:
+        return MaterialPageRoute(builder: (_) => const ReportProblemScreen());
 
       default:
         return MaterialPageRoute(builder: (_) => const WelcomeScreen());

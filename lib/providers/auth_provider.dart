@@ -8,6 +8,13 @@ class AuthProvider extends ChangeNotifier {
   User? _currentUser;
   bool _isLoading = false;
   String? _errorMessage;
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
 
   AuthProvider({AuthRepository? authRepository})
       : authRepository = authRepository ?? AuthRepository();
@@ -114,11 +121,15 @@ class AuthProvider extends ChangeNotifier {
 
   void _setLoading(bool value) {
     _isLoading = value;
-    notifyListeners();
+    if (!_disposed) {
+      notifyListeners();
+    }
   }
 
   void clearError() {
     _errorMessage = null;
-    notifyListeners();
+    if (!_disposed) {
+      notifyListeners();
+    }
   }
 }

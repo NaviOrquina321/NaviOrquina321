@@ -8,6 +8,13 @@ class AvailabilityProvider extends ChangeNotifier {
   List<Availability> _availabilities = [];
   bool _isLoading = false;
   String? _errorMessage;
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
 
   AvailabilityProvider({AvailabilityRepository? availabilityRepository})
       : availabilityRepository = availabilityRepository ?? AvailabilityRepository();
@@ -43,6 +50,6 @@ class AvailabilityProvider extends ChangeNotifier {
 
   void _setLoading(bool value) {
     _isLoading = value;
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 }

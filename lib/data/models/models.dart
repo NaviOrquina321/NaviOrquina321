@@ -62,6 +62,98 @@ class User {
   }
 }
 
+class SupportMessage {
+  final int? id;
+  final int? userId;
+  final String text;
+  final String sender; // 'user' or 'support'
+  final String createdAt;
+
+  SupportMessage({
+    this.id,
+    this.userId,
+    required this.text,
+    required this.sender,
+    required this.createdAt,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      if (id != null) 'id': id,
+      'user_id': userId,
+      'text': text,
+      'sender': sender,
+      'created_at': createdAt,
+    };
+  }
+
+  factory SupportMessage.fromMap(Map<String, dynamic> map) {
+    return SupportMessage(
+      id: map['id'] as int?,
+      userId: map['user_id'] as int?,
+      text: map['text'] as String,
+      sender: map['sender'] as String,
+      createdAt: map['created_at'] as String,
+    );
+  }
+}
+
+class SupportTicket {
+  final int? id;
+  final int userId;
+  final String category;
+  final String description;
+  final String status; // 'open' or 'resolved'
+  final String createdAt;
+
+  SupportTicket({
+    this.id,
+    required this.userId,
+    required this.category,
+    required this.description,
+    this.status = 'open',
+    required this.createdAt,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      if (id != null) 'id': id,
+      'user_id': userId,
+      'category': category,
+      'description': description,
+      'status': status,
+      'created_at': createdAt,
+    };
+  }
+
+  factory SupportTicket.fromMap(Map<String, dynamic> map) {
+    return SupportTicket(
+      id: map['id'] as int?,
+      userId: map['user_id'] as int,
+      category: map['category'] as String,
+      description: map['description'] as String,
+      status: (map['status'] as String?) ?? 'open',
+      createdAt: map['created_at'] as String,
+    );
+  }
+}
+
+class FaqItem {
+  final String id;
+  final String question;
+  final String answer;
+  final String category;
+  final String forRole; // 'patient', 'doctor', or 'all'
+
+  const FaqItem({
+    required this.id,
+    required this.question,
+    required this.answer,
+    required this.category,
+    this.forRole = 'all',
+  });
+}
+
 class Doctor {
   final int? id;
   final int userId;

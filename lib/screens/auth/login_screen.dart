@@ -235,6 +235,23 @@ class _LoginScreenState extends State<LoginScreen> {
                   isLoading: authProvider.isLoading,
                   onPressed: _handleLogin,
                 ),
+                const SizedBox(height: 16),
+
+                Center(
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.help_outline_rounded, size: 18, color: AppColors.blue),
+                    label: const Text(
+                      'Need help?',
+                      style: TextStyle(
+                        color: AppColors.blue,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.pushNamed(context, RouteNames.helpSupport);
+                    },
+                  ),
+                ),
               ],
             ),
           ),

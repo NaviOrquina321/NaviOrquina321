@@ -8,6 +8,7 @@ import 'package:doctor_appointment_app/data/repositories/availability_repository
 import 'package:doctor_appointment_app/data/repositories/appointment_repository.dart';
 import 'package:doctor_appointment_app/data/repositories/review_repository.dart';
 import 'package:doctor_appointment_app/data/repositories/notification_repository.dart';
+import 'package:doctor_appointment_app/data/repositories/support_repository.dart';
 import 'package:doctor_appointment_app/providers/auth_provider.dart';
 import 'package:doctor_appointment_app/core/widgets/app_button.dart';
 import 'package:doctor_appointment_app/core/widgets/app_text_field.dart';
@@ -130,6 +131,38 @@ void main() {
           CREATE TABLE app_session (
             key TEXT PRIMARY KEY,
             value TEXT NOT NULL
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE support_messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            text TEXT NOT NULL,
+            sender TEXT NOT NULL CHECK(sender IN ('user', 'support')),
+            created_at TEXT NOT NULL
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE support_tickets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            category TEXT NOT NULL,
+            description TEXT NOT NULL,
+            status TEXT DEFAULT 'open',
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE faq_feedback (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            faq_id TEXT NOT NULL,
+            user_id INTEGER NOT NULL,
+            helpful INTEGER NOT NULL,
+            UNIQUE(faq_id, user_id)
           )
         ''');
       },
@@ -377,6 +410,94 @@ void main() {
 
     final updatedDoctor = await doctorRepo.getDoctorById(doctor.id!);
     expect(updatedDoctor!.rating, 4.0);
+  });
+
+  test('FAQ search filter returns the right items and handles no match', () {
+    final supportRepo = SupportRepository(dbHelper: TestDbHelper(db));
+
+    // Role filtering
+    final patientFaqs = supportRepo.getFaqs(role: 'patient');
+    expect(patientFaqs.every((f) => f.forRole == 'patient' || f.forRole == 'all'), isTrue);
+
+    // Matching query
+    final bookFaqs = supportRepo.getFaqs(role: 'patient', query: 'book');
+    expect(bookFaqs.isNotEmpty, isTrue);
+
+    // Non-matching query
+    final noMatch = supportRepo.getFaqs(role: 'patient', query: 'xyznonexistent123');
+    expect(noMatch.isEmpty, isTrue);
+  });
+
+  test('Sending a message saves it and creates the right keyword auto-reply', () async {
+    final dbHelper = TestDbHelper(db);
+    final supportRepo = SupportRepository(dbHelper: dbHelper);
+
+    final msg = await supportRepo.sendMessage(userId: 1, text: 'I want to cancel my visit');
+    expect(msg, isNotNull);
+
+    final history = await supportRepo.getSupportMessages(1);
+    expect(history.length, 2); // user message + auto reply
+    expect(history.first.sender, 'user');
+    expect(history.last.sender, 'support');
+    expect(history.last.text.contains('cancel'), isTrue);
+  });
+
+  test('Blank message is ignored', () async {
+    final dbHelper = TestDbHelper(db);
+    final supportRepo = SupportRepository(dbHelper: dbHelper);
+
+    final emptyMsg = await supportRepo.sendMessage(userId: 1, text: '   ');
+    expect(emptyMsg, isNull);
+
+    final history = await supportRepo.getSupportMessages(1);
+    expect(history.isEmpty, isTrue);
+  });
+
+  test('Ticket saved and listed only for its owner', () async {
+    final dbHelper = TestDbHelper(db);
+    final authRepo = AuthRepository(dbHelper: dbHelper);
+    final supportRepo = SupportRepository(dbHelper: dbHelper);
+
+    final user1 = await authRepo.registerUser(
+      fullName: 'User One',
+      email: 'u1@test.com',
+      password: 'Password123',
+      role: 'patient',
+    );
+
+    final user2 = await authRepo.registerUser(
+      fullName: 'User Two',
+      email: 'u2@test.com',
+      password: 'Password123',
+      role: 'patient',
+    );
+
+    final ticket = await supportRepo.createSupportTicket(
+      userId: user1.id!,
+      category: 'Booking',
+      description: 'Detailed problem description here.',
+    );
+    expect(ticket.id, isNotNull);
+
+    final u1Tickets = await supportRepo.getUserSupportTickets(user1.id!);
+    expect(u1Tickets.length, 1);
+
+    final u2Tickets = await supportRepo.getUserSupportTickets(user2.id!);
+    expect(u2Tickets.isEmpty, isTrue);
+  });
+
+  test('FAQ feedback is limited to one vote per user per question', () async {
+    final dbHelper = TestDbHelper(db);
+    final supportRepo = SupportRepository(dbHelper: dbHelper);
+
+    final vote1 = await supportRepo.saveFaqFeedback(faqId: 'p1', userId: 10, helpful: true);
+    expect(vote1, isTrue);
+
+    final vote2 = await supportRepo.saveFaqFeedback(faqId: 'p1', userId: 10, helpful: false);
+    expect(vote2, isFalse);
+
+    final hasVoted = await supportRepo.hasUserVotedFaq('p1', 10);
+    expect(hasVoted, isTrue);
   });
 
   testWidgets('Validation errors appear on empty text field submit', (WidgetTester tester) async {

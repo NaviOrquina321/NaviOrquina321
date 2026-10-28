@@ -22,4 +22,9 @@ class RouteNames {
   static const String doctorAvailability = '/doctor/availability';
   static const String doctorProfileAccount = '/doctor/profile-account';
   static const String doctorConsultation = '/doctor/consultation';
+
+  // Shared Routes
+  static const String helpSupport = '/help-support';
+  static const String supportChat = '/support-chat';
+  static const String reportProblem = '/report-problem';
 }

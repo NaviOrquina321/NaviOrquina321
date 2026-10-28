@@ -9,6 +9,13 @@ class NotificationProvider extends ChangeNotifier {
   int _unreadCount = 0;
   bool _isLoading = false;
   String? _errorMessage;
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
 
   NotificationProvider({NotificationRepository? notificationRepository})
       : notificationRepository = notificationRepository ?? NotificationRepository();
@@ -53,6 +60,6 @@ class NotificationProvider extends ChangeNotifier {
 
   void _setLoading(bool value) {
     _isLoading = value;
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 }

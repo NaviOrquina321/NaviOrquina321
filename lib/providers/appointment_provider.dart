@@ -13,6 +13,13 @@ class AppointmentProvider extends ChangeNotifier {
   List<String> _bookedSlots = [];
   bool _isLoading = false;
   String? _errorMessage;
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
 
   AppointmentProvider({AppointmentRepository? appointmentRepository})
       : appointmentRepository = appointmentRepository ?? AppointmentRepository();
@@ -75,10 +82,10 @@ class AppointmentProvider extends ChangeNotifier {
   Future<void> fetchBookedSlots(int doctorId, String date) async {
     try {
       _bookedSlots = await appointmentRepository.getBookedSlotsForDoctorAndDate(doctorId, date);
-      notifyListeners();
+      if (!_disposed) notifyListeners();
     } catch (_) {
       _bookedSlots = [];
-      notifyListeners();
+      if (!_disposed) notifyListeners();
     }
   }
 
@@ -172,7 +179,7 @@ class AppointmentProvider extends ChangeNotifier {
 
   void _setLoading(bool value) {
     _isLoading = value;
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   void clearError() {
