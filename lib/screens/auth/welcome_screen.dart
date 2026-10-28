@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_button.dart';
+import '../../core/widgets/app_logo.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -17,36 +18,7 @@ class WelcomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(),
-              Container(
-                height: 120,
-                width: 120,
-                decoration: const BoxDecoration(
-                  color: AppColors.tint,
-                  shape: BoxShape.circle,
-                ),
-                padding: const EdgeInsets.all(16),
-                child: Image.asset(
-                  'assets/images/logo.png',
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.local_hospital_rounded, size: 48, color: AppColors.blue),
-                        SizedBox(height: 4),
-                        Text(
-                          'CLINIC',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.navy,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
+              const AppLogo(size: 120),
               const SizedBox(height: 32),
               const Text(
                 'Doctor Appointment',

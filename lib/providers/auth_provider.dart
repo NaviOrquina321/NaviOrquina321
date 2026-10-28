@@ -26,6 +26,16 @@ class AuthProvider extends ChangeNotifier {
   bool get isDoctor => _currentUser?.role == 'doctor';
   bool get isPatient => _currentUser?.role == 'patient';
 
+  Future<void> refreshCurrentUser() async {
+    if (_currentUser?.id != null) {
+      final updated = await authRepository.getUserById(_currentUser!.id!);
+      if (updated != null) {
+        _currentUser = updated;
+        if (!_disposed) notifyListeners();
+      }
+    }
+  }
+
   Future<bool> tryAutoLogin() async {
     _setLoading(true);
     try {

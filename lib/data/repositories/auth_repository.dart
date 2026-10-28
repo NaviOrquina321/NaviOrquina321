@@ -15,6 +15,13 @@ class AuthRepository {
     return values.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
   }
 
+  Future<User?> getUserById(int userId) async {
+    final db = await dbHelper.database;
+    final res = await db.query('users', where: 'id = ?', whereArgs: [userId]);
+    if (res.isEmpty) return null;
+    return User.fromMap(res.first);
+  }
+
   Future<User?> login(String email, String password, String expectedRole) async {
     final db = await dbHelper.database;
     final results = await db.query(
@@ -69,6 +76,7 @@ class AuthRepository {
         'password_hash': passwordHash,
         'salt': salt,
         'created_at': nowStr,
+        'profile_completed': 0,
       });
 
       if (role == 'doctor') {
@@ -105,6 +113,7 @@ class AuthRepository {
         passwordHash: passwordHash,
         salt: salt,
         createdAt: nowStr,
+        profileCompleted: 0,
       );
 
       await saveSessionWithTxn(txn, userId, role);

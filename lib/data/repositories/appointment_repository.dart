@@ -91,19 +91,27 @@ class AppointmentRepository {
     });
   }
 
-  Future<List<Appointment>> getPatientAppointments(int patientId, {bool past = false}) async {
+  Future<List<Appointment>> getPatientAppointments(int patientId, {bool past = false, String? dateFilter}) async {
     final db = await dbHelper.database;
-    final sql = '''
+    String sql = '''
       SELECT a.*, d.specialty, d.room, d.rating, d.user_id as doc_user_id,
              u.full_name as doc_name, u.email as doc_email
       FROM appointments a
       JOIN doctors d ON a.doctor_id = d.id
       JOIN users u ON d.user_id = u.id
       WHERE a.patient_id = ? AND ${past ? "a.status IN ('completed', 'cancelled', 'declined')" : "a.status IN ('pending', 'confirmed', 'in_progress')"}
-      ORDER BY a.date DESC, a.time DESC
     ''';
 
-    final results = await db.rawQuery(sql, [patientId]);
+    List<dynamic> args = [patientId];
+
+    if (dateFilter != null) {
+      sql += ' AND a.date = ?';
+      args.add(dateFilter);
+    }
+
+    sql += ' ORDER BY a.date DESC, a.time DESC';
+
+    final results = await db.rawQuery(sql, args);
 
     return results.map((row) {
       final docUser = User(
@@ -212,6 +220,34 @@ class AppointmentRepository {
     );
 
     return Appointment.fromMap(row, patientUser: patientUser, doctor: doctor);
+  }
+
+  Future<void> markArrived({
+    required int appointmentId,
+    required String arrivedAt,
+    required int doctorUserId,
+    required String patientName,
+  }) async {
+    final db = await dbHelper.database;
+    final nowStr = DateTime.now().toIso8601String();
+
+    await db.transaction((txn) async {
+      await txn.update(
+        'appointments',
+        {'arrived_at': arrivedAt},
+        where: 'id = ?',
+        whereArgs: [appointmentId],
+      );
+
+      await txn.insert('notifications', {
+        'user_id': doctorUserId,
+        'type': 'patient_arrived',
+        'title': 'Patient Arrived',
+        'body': '$patientName has arrived at the clinic.',
+        'is_read': 0,
+        'created_at': nowStr,
+      });
+    });
   }
 
   Future<void> updateAppointmentStatus(int appointmentId, String newStatus, {required int notifyUserId, required String notificationTitle, required String notificationBody}) async {

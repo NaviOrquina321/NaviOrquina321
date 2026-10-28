@@ -11,6 +11,9 @@ import 'screens/doctor/doctor_patients_screen.dart';
 import 'screens/doctor/doctor_profile_account_screen.dart';
 import 'screens/doctor/doctor_reviews_screen.dart';
 import 'screens/doctor/patient_details_screen.dart';
+import 'screens/doctor/pin_clinic_screen.dart';
+import 'screens/onboarding/doctor_onboarding_screen.dart';
+import 'screens/onboarding/patient_onboarding_screen.dart';
 import 'screens/patient/book_appointment_screen.dart';
 import 'screens/patient/booking_confirmed_screen.dart';
 import 'screens/patient/doctor_profile_screen.dart';
@@ -25,7 +28,7 @@ import 'screens/patient/payment_screen.dart';
 import 'screens/patient/visit_details_screen.dart';
 import 'screens/patient/visit_summary_screen.dart';
 import 'screens/shared/appointment_chat_screen.dart';
-import 'screens/shared/clinic_location_screen.dart';
+import 'screens/shared/clinic_details_screen.dart';
 import 'screens/shared/help_support_screen.dart';
 import 'screens/shared/offline_state_screen.dart';
 import 'screens/shared/report_problem_screen.dart';
@@ -44,6 +47,12 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const RegisterScreen());
       case RouteNames.forgotPassword:
         return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
+
+      // Onboarding Routes
+      case RouteNames.patientOnboarding:
+        return MaterialPageRoute(builder: (_) => const PatientOnboardingScreen());
+      case RouteNames.doctorOnboarding:
+        return MaterialPageRoute(builder: (_) => const DoctorOnboardingScreen());
 
       // Patient Routes
       case RouteNames.patientHome:
@@ -108,6 +117,17 @@ class AppRoutes {
       case RouteNames.patientDetails:
         final apptId = settings.arguments as int;
         return MaterialPageRoute(builder: (_) => PatientDetailsScreen(appointmentId: apptId));
+      case RouteNames.pinClinic:
+        if (settings.arguments is Map<String, dynamic>) {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (_) => PinClinicScreen(
+              initialLat: args['lat'] as double?,
+              initialLng: args['lng'] as double?,
+            ),
+          );
+        }
+        return MaterialPageRoute(builder: (_) => const PinClinicScreen());
 
       // Shared Routes
       case RouteNames.helpSupport:
@@ -125,8 +145,8 @@ class AppRoutes {
         final apptId = settings.arguments as int;
         return MaterialPageRoute(builder: (_) => AppointmentChatScreen(appointmentId: apptId));
       case RouteNames.clinicLocation:
-        final docId = settings.arguments as int?;
-        return MaterialPageRoute(builder: (_) => ClinicLocationScreen(doctorId: docId));
+        final docId = settings.arguments as int;
+        return MaterialPageRoute(builder: (_) => ClinicDetailsScreen(doctorId: docId));
       case RouteNames.offlineState:
         return MaterialPageRoute(builder: (_) => const OfflineStateScreen());
 

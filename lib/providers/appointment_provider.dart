@@ -7,6 +7,7 @@ class AppointmentProvider extends ChangeNotifier {
 
   List<Appointment> _upcomingAppointments = [];
   List<Appointment> _pastAppointments = [];
+  List<Appointment> _patientAppointments = [];
   List<Appointment> _doctorAppointments = [];
   Appointment? _selectedAppointment;
   List<Prescription> _selectedPrescriptions = [];
@@ -26,6 +27,7 @@ class AppointmentProvider extends ChangeNotifier {
 
   List<Appointment> get upcomingAppointments => _upcomingAppointments;
   List<Appointment> get pastAppointments => _pastAppointments;
+  List<Appointment> get patientAppointments => _patientAppointments;
   List<Appointment> get doctorAppointments => _doctorAppointments;
   Appointment? get selectedAppointment => _selectedAppointment;
   List<Prescription> get selectedPrescriptions => _selectedPrescriptions;
@@ -40,11 +42,36 @@ class AppointmentProvider extends ChangeNotifier {
     return confirmed.first;
   }
 
-  Future<void> fetchPatientAppointments(int patientId) async {
+  Future<void> fetchPatientAppointments(int patientId, {String? dateFilter}) async {
     _setLoading(true);
     try {
+      _patientAppointments = await appointmentRepository.getPatientAppointments(patientId, past: false, dateFilter: dateFilter);
       _upcomingAppointments = await appointmentRepository.getPatientAppointments(patientId, past: false);
       _pastAppointments = await appointmentRepository.getPatientAppointments(patientId, past: true);
+      _setLoading(false);
+    } catch (e) {
+      _errorMessage = e.toString();
+      _setLoading(false);
+    }
+  }
+
+  Future<void> markArrived({
+    required int appointmentId,
+    required String arrivedAt,
+    required int doctorUserId,
+    required String patientName,
+  }) async {
+    _setLoading(true);
+    try {
+      await appointmentRepository.markArrived(
+        appointmentId: appointmentId,
+        arrivedAt: arrivedAt,
+        doctorUserId: doctorUserId,
+        patientName: patientName,
+      );
+      if (_selectedAppointment?.id == appointmentId) {
+        _selectedAppointment = _selectedAppointment!.copyWith(arrivedAt: arrivedAt);
+      }
       _setLoading(false);
     } catch (e) {
       _errorMessage = e.toString();

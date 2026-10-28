@@ -4,6 +4,10 @@ class RouteNames {
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
 
+  // Onboarding Routes
+  static const String patientOnboarding = '/onboarding/patient';
+  static const String doctorOnboarding = '/onboarding/doctor';
+
   // Patient Routes
   static const String patientHome = '/patient/home';
   static const String patientDoctors = '/patient/doctors';
@@ -27,6 +31,7 @@ class RouteNames {
   static const String doctorConsultation = '/doctor/consultation';
   static const String doctorReviews = '/doctor/reviews';
   static const String patientDetails = '/doctor/patient-details';
+  static const String pinClinic = '/doctor/pin-clinic';
 
   // Shared Routes
   static const String helpSupport = '/help-support';

@@ -24,7 +24,7 @@ void main() {
   setUp(() async {
     db = await openDatabase(
       inMemoryDatabasePath,
-      version: 1,
+      version: 5,
       onConfigure: (db) async => await db.execute('PRAGMA foreign_keys = ON'),
       onCreate: (db, version) async {
         await db.execute('''
@@ -32,6 +32,24 @@ void main() {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             role TEXT CHECK(role IN ('patient','doctor')),
             full_name TEXT NOT NULL,
+            first_name TEXT,
+            middle_name TEXT,
+            last_name TEXT,
+            suffix TEXT,
+            birth_date TEXT,
+            sex TEXT,
+            civil_status TEXT,
+            phone TEXT,
+            house_street TEXT,
+            barangay TEXT,
+            city TEXT,
+            province TEXT,
+            zip TEXT,
+            latitude REAL,
+            longitude REAL,
+            photo_path TEXT,
+            profile_completed INTEGER DEFAULT 0,
+            onboarding_step INTEGER DEFAULT 0,
             email TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
             salt TEXT NOT NULL,
@@ -51,6 +69,52 @@ void main() {
             patients_count INTEGER DEFAULT 0,
             auto_confirm INTEGER DEFAULT 1,
             consultation_fee REAL DEFAULT 500.0,
+            clinic_name TEXT,
+            clinic_address TEXT,
+            clinic_phone TEXT,
+            directions_note TEXT,
+            walk_ins INTEGER DEFAULT 1,
+            latitude REAL,
+            longitude REAL,
+            location_accuracy REAL,
+            location_updated_at TEXT,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE patient_profiles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER UNIQUE NOT NULL,
+            emergency_name TEXT,
+            emergency_relation TEXT,
+            emergency_phone TEXT,
+            blood_type TEXT,
+            height_cm REAL,
+            weight_kg REAL,
+            allergies TEXT,
+            conditions TEXT,
+            medications TEXT,
+            philhealth_no TEXT,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE doctor_profiles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER UNIQUE NOT NULL,
+            specialty TEXT,
+            sub_specialty TEXT,
+            prc_number TEXT,
+            license_expiry TEXT,
+            years_experience INTEGER DEFAULT 0,
+            medical_school TEXT,
+            graduation_year INTEGER,
+            languages TEXT,
+            bio TEXT,
+            prc_photo_path TEXT,
+            verification_status TEXT DEFAULT 'pending',
             FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
           )
         ''');
@@ -85,6 +149,7 @@ void main() {
             payment_status TEXT,
             amount REAL DEFAULT 500.0,
             meeting_link TEXT,
+            arrived_at TEXT,
             FOREIGN KEY (patient_id) REFERENCES users (id) ON DELETE CASCADE,
             FOREIGN KEY (doctor_id) REFERENCES doctors (id) ON DELETE CASCADE
           )

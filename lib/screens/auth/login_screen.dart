@@ -4,6 +4,7 @@ import '../../core/constants/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/app_utils.dart';
 import '../../core/widgets/app_button.dart';
+import '../../core/widgets/app_logo.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../providers/auth_provider.dart';
 
@@ -42,18 +43,26 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (mounted) {
       if (success) {
-        if (_isPatientSelected) {
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            RouteNames.patientHome,
-            (route) => false,
-          );
+        if (authProvider.currentUser?.profileCompleted == 0) {
+          if (_isPatientSelected) {
+            Navigator.pushNamedAndRemoveUntil(context, RouteNames.patientOnboarding, (route) => false);
+          } else {
+            Navigator.pushNamedAndRemoveUntil(context, RouteNames.doctorOnboarding, (route) => false);
+          }
         } else {
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            RouteNames.doctorDashboard,
-            (route) => false,
-          );
+          if (_isPatientSelected) {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              RouteNames.patientHome,
+              (route) => false,
+            );
+          } else {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              RouteNames.doctorDashboard,
+              (route) => false,
+            );
+          }
         }
       }
     }
@@ -76,26 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Center(
-                  child: Container(
-                    height: 80,
-                    width: 80,
-                    decoration: const BoxDecoration(
-                      color: AppColors.tint,
-                      shape: BoxShape.circle,
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
-                        Icons.local_hospital_rounded,
-                        size: 40,
-                        color: AppColors.blue,
-                      ),
-                    ),
-                  ),
-                ),
+                const Center(child: AppLogo(size: 100)),
                 const SizedBox(height: 24),
 
                 // Role Segmented Control

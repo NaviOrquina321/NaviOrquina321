@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'core/constants/route_names.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
+import 'core/widgets/app_logo.dart';
 import 'data/db/database_helper.dart';
 import 'data/repositories/appointment_repository.dart';
 import 'data/repositories/auth_repository.dart';
@@ -22,6 +24,7 @@ import 'providers/chat_provider.dart';
 import 'providers/doctor_provider.dart';
 import 'providers/medical_record_provider.dart';
 import 'providers/notification_provider.dart';
+import 'providers/onboarding_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/support_provider.dart';
 import 'routes.dart';
@@ -99,6 +102,7 @@ class DoctorAppointmentApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SettingsProvider(settingsRepository: SettingsRepository())),
         ChangeNotifierProvider(create: (_) => MedicalRecordProvider(medicalRecordRepository: MedicalRecordRepository())),
         ChangeNotifierProvider(create: (_) => ChatProvider(chatRepository: ChatRepository())),
+        ChangeNotifierProvider(create: (_) => OnboardingProvider()),
       ],
       child: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
@@ -138,13 +142,22 @@ class _SplashOrHomeScreenState extends State<SplashOrHomeScreen> {
     if (!mounted) return;
 
     if (hasSession && authProvider.currentUser != null) {
-      if (authProvider.isDoctor) {
-        Navigator.pushReplacementNamed(context, '/doctor/dashboard');
+      final user = authProvider.currentUser!;
+      if (user.profileCompleted == 0) {
+        if (authProvider.isDoctor) {
+          Navigator.pushReplacementNamed(context, RouteNames.doctorOnboarding);
+        } else {
+          Navigator.pushReplacementNamed(context, RouteNames.patientOnboarding);
+        }
       } else {
-        Navigator.pushReplacementNamed(context, '/patient/home');
+        if (authProvider.isDoctor) {
+          Navigator.pushReplacementNamed(context, RouteNames.doctorDashboard);
+        } else {
+          Navigator.pushReplacementNamed(context, RouteNames.patientHome);
+        }
       }
     } else {
-      Navigator.pushReplacementNamed(context, '/welcome');
+      Navigator.pushReplacementNamed(context, RouteNames.welcome);
     }
   }
 
@@ -155,25 +168,10 @@ class _SplashOrHomeScreenState extends State<SplashOrHomeScreen> {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              height: 100,
-              width: 100,
-              decoration: const BoxDecoration(
-                color: AppColors.tint,
-                shape: BoxShape.circle,
-              ),
-              padding: const EdgeInsets.all(12),
-              child: Image.asset(
-                'assets/images/logo.png',
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Icon(Icons.local_hospital_rounded, size: 48, color: AppColors.blue);
-                },
-              ),
-            ),
-            const SizedBox(height: 24),
-            const CircularProgressIndicator(),
+          children: const [
+            AppLogo(size: 100),
+            SizedBox(height: 24),
+            CircularProgressIndicator(),
           ],
         ),
       ),

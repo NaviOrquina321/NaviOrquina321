@@ -4,6 +4,7 @@ import '../../core/constants/route_names.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/app_utils.dart';
 import '../../core/widgets/app_button.dart';
+import '../../core/widgets/app_logo.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../providers/auth_provider.dart';
 
@@ -55,13 +56,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
         if (_isPatientSelected) {
           Navigator.pushNamedAndRemoveUntil(
             context,
-            RouteNames.patientHome,
+            RouteNames.patientOnboarding,
             (route) => false,
           );
         } else {
           Navigator.pushNamedAndRemoveUntil(
             context,
-            RouteNames.doctorDashboard,
+            RouteNames.doctorOnboarding,
             (route) => false,
           );
         }
@@ -86,26 +87,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Center(
-                  child: Container(
-                    height: 80,
-                    width: 80,
-                    decoration: const BoxDecoration(
-                      color: AppColors.tint,
-                      shape: BoxShape.circle,
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
-                        Icons.local_hospital_rounded,
-                        size: 40,
-                        color: AppColors.blue,
-                      ),
-                    ),
-                  ),
-                ),
+                const Center(child: AppLogo(size: 80)),
                 const SizedBox(height: 20),
 
                 // Segmented Switch
@@ -252,7 +234,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ],
 
                 const SizedBox(height: 12),
-                AppButton(
+                PrimaryButton(
                   text: 'Create Account',
                   isLoading: authProvider.isLoading,
                   onPressed: _handleRegister,

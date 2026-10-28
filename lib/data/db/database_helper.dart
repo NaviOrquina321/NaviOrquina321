@@ -22,7 +22,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onConfigure: _onConfigure,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
@@ -40,6 +40,24 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         role TEXT CHECK(role IN ('patient','doctor')),
         full_name TEXT NOT NULL,
+        first_name TEXT,
+        middle_name TEXT,
+        last_name TEXT,
+        suffix TEXT,
+        birth_date TEXT,
+        sex TEXT,
+        civil_status TEXT,
+        phone TEXT,
+        house_street TEXT,
+        barangay TEXT,
+        city TEXT,
+        province TEXT,
+        zip TEXT,
+        latitude REAL,
+        longitude REAL,
+        photo_path TEXT,
+        profile_completed INTEGER DEFAULT 0,
+        onboarding_step INTEGER DEFAULT 0,
         email TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
         salt TEXT NOT NULL,
@@ -60,6 +78,54 @@ class DatabaseHelper {
         patients_count INTEGER DEFAULT 0,
         auto_confirm INTEGER DEFAULT 1,
         consultation_fee REAL DEFAULT 500.0,
+        clinic_name TEXT,
+        clinic_address TEXT,
+        clinic_phone TEXT,
+        directions_note TEXT,
+        walk_ins INTEGER DEFAULT 1,
+        latitude REAL,
+        longitude REAL,
+        location_accuracy REAL,
+        location_updated_at TEXT,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Patient Profiles table
+    await db.execute('''
+      CREATE TABLE patient_profiles (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER UNIQUE NOT NULL,
+        emergency_name TEXT,
+        emergency_relation TEXT,
+        emergency_phone TEXT,
+        blood_type TEXT,
+        height_cm REAL,
+        weight_kg REAL,
+        allergies TEXT,
+        conditions TEXT,
+        medications TEXT,
+        philhealth_no TEXT,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Doctor Profiles table
+    await db.execute('''
+      CREATE TABLE doctor_profiles (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER UNIQUE NOT NULL,
+        specialty TEXT,
+        sub_specialty TEXT,
+        prc_number TEXT,
+        license_expiry TEXT,
+        years_experience INTEGER DEFAULT 0,
+        medical_school TEXT,
+        graduation_year INTEGER,
+        languages TEXT,
+        bio TEXT,
+        prc_photo_path TEXT,
+        verification_status TEXT DEFAULT 'pending',
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
       )
     ''');
@@ -96,6 +162,7 @@ class DatabaseHelper {
         payment_status TEXT,
         amount REAL DEFAULT 500.0,
         meeting_link TEXT,
+        arrived_at TEXT,
         FOREIGN KEY (patient_id) REFERENCES users (id) ON DELETE CASCADE,
         FOREIGN KEY (doctor_id) REFERENCES doctors (id) ON DELETE CASCADE
       )
@@ -310,6 +377,77 @@ class DatabaseHelper {
         )
       ''');
     }
+    if (oldVersion < 5) {
+      await db.execute("ALTER TABLE users ADD COLUMN first_name TEXT");
+      await db.execute("ALTER TABLE users ADD COLUMN middle_name TEXT");
+      await db.execute("ALTER TABLE users ADD COLUMN last_name TEXT");
+      await db.execute("ALTER TABLE users ADD COLUMN suffix TEXT");
+      await db.execute("ALTER TABLE users ADD COLUMN birth_date TEXT");
+      await db.execute("ALTER TABLE users ADD COLUMN sex TEXT");
+      await db.execute("ALTER TABLE users ADD COLUMN civil_status TEXT");
+      await db.execute("ALTER TABLE users ADD COLUMN phone TEXT");
+      await db.execute("ALTER TABLE users ADD COLUMN house_street TEXT");
+      await db.execute("ALTER TABLE users ADD COLUMN barangay TEXT");
+      await db.execute("ALTER TABLE users ADD COLUMN city TEXT");
+      await db.execute("ALTER TABLE users ADD COLUMN province TEXT");
+      await db.execute("ALTER TABLE users ADD COLUMN zip TEXT");
+      await db.execute("ALTER TABLE users ADD COLUMN latitude REAL");
+      await db.execute("ALTER TABLE users ADD COLUMN longitude REAL");
+      await db.execute("ALTER TABLE users ADD COLUMN photo_path TEXT");
+      await db.execute("ALTER TABLE users ADD COLUMN profile_completed INTEGER DEFAULT 0");
+      await db.execute("ALTER TABLE users ADD COLUMN onboarding_step INTEGER DEFAULT 0");
+
+      await db.execute("UPDATE users SET profile_completed = 1");
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS patient_profiles (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER UNIQUE NOT NULL,
+          emergency_name TEXT,
+          emergency_relation TEXT,
+          emergency_phone TEXT,
+          blood_type TEXT,
+          height_cm REAL,
+          weight_kg REAL,
+          allergies TEXT,
+          conditions TEXT,
+          medications TEXT,
+          philhealth_no TEXT,
+          FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+      ''');
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS doctor_profiles (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER UNIQUE NOT NULL,
+          specialty TEXT,
+          sub_specialty TEXT,
+          prc_number TEXT,
+          license_expiry TEXT,
+          years_experience INTEGER DEFAULT 0,
+          medical_school TEXT,
+          graduation_year INTEGER,
+          languages TEXT,
+          bio TEXT,
+          prc_photo_path TEXT,
+          verification_status TEXT DEFAULT 'pending',
+          FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+      ''');
+
+      await db.execute("ALTER TABLE doctors ADD COLUMN clinic_name TEXT");
+      await db.execute("ALTER TABLE doctors ADD COLUMN clinic_address TEXT");
+      await db.execute("ALTER TABLE doctors ADD COLUMN clinic_phone TEXT");
+      await db.execute("ALTER TABLE doctors ADD COLUMN directions_note TEXT");
+      await db.execute("ALTER TABLE doctors ADD COLUMN walk_ins INTEGER DEFAULT 1");
+      await db.execute("ALTER TABLE doctors ADD COLUMN latitude REAL");
+      await db.execute("ALTER TABLE doctors ADD COLUMN longitude REAL");
+      await db.execute("ALTER TABLE doctors ADD COLUMN location_accuracy REAL");
+      await db.execute("ALTER TABLE doctors ADD COLUMN location_updated_at TEXT");
+
+      await db.execute("ALTER TABLE appointments ADD COLUMN arrived_at TEXT");
+    }
   }
 
   static String hashPassword(String password, String salt) {
@@ -325,37 +463,59 @@ class DatabaseHelper {
     final louieId = await db.insert('users', {
       'role': 'patient',
       'full_name': 'Louie Duarte',
+      'first_name': 'Louie',
+      'last_name': 'Duarte',
       'email': 'louie@email.com',
       'password_hash': hashPassword('Password123', salt),
       'salt': salt,
+      'profile_completed': 1,
       'created_at': nowStr,
+    });
+
+    await db.insert('patient_profiles', {
+      'user_id': louieId,
+      'blood_type': 'O+',
+      'allergies': 'Penicillin, Peanuts',
+      'conditions': 'Hypertension',
+      'emergency_name': 'Maria Duarte',
+      'emergency_relation': 'Spouse',
+      'emergency_phone': '09171234567',
     });
 
     // Seed Extra Patients
     final markId = await db.insert('users', {
       'role': 'patient',
       'full_name': 'Mark Tan',
+      'first_name': 'Mark',
+      'last_name': 'Tan',
       'email': 'mark@email.com',
       'password_hash': hashPassword('Password123', salt),
       'salt': salt,
+      'profile_completed': 1,
       'created_at': nowStr,
     });
 
     final lizaId = await db.insert('users', {
       'role': 'patient',
       'full_name': 'Liza Ramos',
+      'first_name': 'Liza',
+      'last_name': 'Ramos',
       'email': 'liza@email.com',
       'password_hash': hashPassword('Password123', salt),
       'salt': salt,
+      'profile_completed': 1,
       'created_at': nowStr,
     });
 
     final benId = await db.insert('users', {
       'role': 'patient',
       'full_name': 'Ben Cruz',
+      'first_name': 'Ben',
+      'last_name': 'Cruz',
       'email': 'ben@email.com',
       'password_hash': hashPassword('Password123', salt),
       'salt': salt,
+      'profile_completed': 1,
       'created_at': nowStr,
     });
 
@@ -363,9 +523,13 @@ class DatabaseHelper {
     final rjUserId = await db.insert('users', {
       'role': 'doctor',
       'full_name': 'Dr. Rj Cardinal',
+      'first_name': 'Rj',
+      'last_name': 'Cardinal',
+      'suffix': 'MD',
       'email': 'rj@clinic.com',
       'password_hash': hashPassword('Password123', salt),
       'salt': salt,
+      'profile_completed': 1,
       'created_at': nowStr,
     });
 
@@ -378,15 +542,27 @@ class DatabaseHelper {
       'years_experience': 10,
       'patients_count': 120,
       'auto_confirm': 1,
+      'clinic_name': 'Central Health Clinic',
+      'clinic_address': '123 Medical Center Way, Suite 400, Healthcare District, Metro Manila',
+      'clinic_phone': '+63 2 8123 4567',
+      'directions_note': 'Near St. Luke Hospital, 4th Floor',
+      'latitude': 14.5995,
+      'longitude': 120.9842,
+      'location_accuracy': 10.0,
+      'location_updated_at': nowStr,
     });
 
     // Seed Doctor 2: Dr. Ivan Orquina
     final ivanUserId = await db.insert('users', {
       'role': 'doctor',
       'full_name': 'Dr. Ivan Orquina',
+      'first_name': 'Ivan',
+      'last_name': 'Orquina',
+      'suffix': 'MD',
       'email': 'ivan@clinic.com',
       'password_hash': hashPassword('Password123', salt),
       'salt': salt,
+      'profile_completed': 1,
       'created_at': nowStr,
     });
 
@@ -399,15 +575,26 @@ class DatabaseHelper {
       'years_experience': 8,
       'patients_count': 95,
       'auto_confirm': 0,
+      'clinic_name': 'Children Care Clinic',
+      'clinic_address': '456 Pediatric Way, Suite 101, Metro Manila',
+      'clinic_phone': '+63 2 8234 5678',
+      'latitude': 14.5900,
+      'longitude': 120.9800,
+      'location_accuracy': 12.0,
+      'location_updated_at': nowStr,
     });
 
     // Seed Doctor 3: Dr. Alejo
     final alejoUserId = await db.insert('users', {
       'role': 'doctor',
       'full_name': 'Dr. Alejo',
+      'first_name': 'Alejo',
+      'last_name': 'Santos',
+      'suffix': 'MD',
       'email': 'alejo@clinic.com',
       'password_hash': hashPassword('Password123', salt),
       'salt': salt,
+      'profile_completed': 1,
       'created_at': nowStr,
     });
 
@@ -420,6 +607,13 @@ class DatabaseHelper {
       'years_experience': 6,
       'patients_count': 80,
       'auto_confirm': 1,
+      'clinic_name': 'Aesthetic Skin Clinic',
+      'clinic_address': '789 Skin Care Blvd, Metro Manila',
+      'clinic_phone': '+63 2 8345 6789',
+      'latitude': 14.6050,
+      'longitude': 120.9900,
+      'location_accuracy': 15.0,
+      'location_updated_at': nowStr,
     });
 
     // Seed Availability for Doctors (Mon-Fri 09:00-17:00, Sat 09:00-12:00, Sun closed)

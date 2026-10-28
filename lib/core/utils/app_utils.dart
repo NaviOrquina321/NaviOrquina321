@@ -38,6 +38,13 @@ class DateTimeUtils {
 }
 
 class Validators {
+  static String? required(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'This field is required';
+    }
+    return null;
+  }
+
   static String? requiredField(String? value, String fieldName) {
     if (value == null || value.trim().isEmpty) {
       return '$fieldName is required';
@@ -62,6 +69,17 @@ class Validators {
     }
     if (value.length < 8) {
       return 'Password must be at least 8 characters';
+    }
+    return null;
+  }
+
+  static String? phone(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Phone number is required';
+    }
+    final clean = value.replaceAll(RegExp(r'[\s-\(\)]'), '');
+    if (clean.length < 10) {
+      return 'Please enter a valid mobile number';
     }
     return null;
   }
