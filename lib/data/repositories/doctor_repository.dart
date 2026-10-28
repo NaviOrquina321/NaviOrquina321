@@ -107,6 +107,30 @@ class DoctorRepository {
     return results.map((r) => r['specialty'] as String).toList();
   }
 
+  Future<List<Review>> getReviewsForDoctor(int doctorId) async {
+    final db = await dbHelper.database;
+    final results = await db.rawQuery('''
+      SELECT r.*, u.full_name as patient_name
+      FROM reviews r
+      JOIN users u ON r.patient_id = u.id
+      WHERE r.doctor_id = ?
+      ORDER BY r.created_at DESC
+    ''', [doctorId]);
+
+    return results.map((r) {
+      return Review(
+        id: r['id'] as int,
+        appointmentId: r['appointment_id'] as int,
+        patientId: r['patient_id'] as int,
+        doctorId: r['doctor_id'] as int,
+        rating: r['rating'] as int,
+        tags: (r['tags'] as String?) ?? '',
+        comment: r['comment'] as String?,
+        createdAt: r['created_at'] as String,
+      );
+    }).toList();
+  }
+
   Future<void> updateDoctorProfile(int doctorId, {String? specialty, String? room, String? bio, bool? autoConfirm}) async {
     final db = await dbHelper.database;
     final Map<String, dynamic> updates = {};

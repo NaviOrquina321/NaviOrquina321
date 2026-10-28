@@ -7,6 +7,7 @@ class DoctorProvider extends ChangeNotifier {
 
   List<Doctor> _doctors = [];
   List<String> _specialties = ['All'];
+  List<Review> _doctorReviews = [];
   Doctor? _selectedDoctor;
   Doctor? _currentDoctorProfile;
   bool _isLoading = false;
@@ -24,6 +25,7 @@ class DoctorProvider extends ChangeNotifier {
 
   List<Doctor> get doctors => _doctors;
   List<String> get specialties => _specialties;
+  List<Review> get doctorReviews => _doctorReviews;
   Doctor? get selectedDoctor => _selectedDoctor;
   Doctor? get currentDoctorProfile => _currentDoctorProfile;
   bool get isLoading => _isLoading;
@@ -55,6 +57,11 @@ class DoctorProvider extends ChangeNotifier {
     _setLoading(true);
     try {
       _selectedDoctor = await doctorRepository.getDoctorById(doctorId);
+      if (_selectedDoctor != null) {
+        _doctorReviews = await doctorRepository.getReviewsForDoctor(doctorId);
+      } else {
+        _doctorReviews = [];
+      }
       _setLoading(false);
     } catch (e) {
       _errorMessage = e.toString();

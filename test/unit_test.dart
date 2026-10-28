@@ -8,6 +8,7 @@ import 'package:doctor_appointment_app/data/repositories/availability_repository
 import 'package:doctor_appointment_app/data/repositories/appointment_repository.dart';
 import 'package:doctor_appointment_app/data/repositories/review_repository.dart';
 import 'package:doctor_appointment_app/data/repositories/notification_repository.dart';
+import 'package:doctor_appointment_app/data/repositories/settings_repository.dart';
 import 'package:doctor_appointment_app/data/repositories/support_repository.dart';
 import 'package:doctor_appointment_app/providers/auth_provider.dart';
 import 'package:doctor_appointment_app/core/widgets/app_button.dart';
@@ -49,6 +50,7 @@ void main() {
             years_experience INTEGER DEFAULT 0,
             patients_count INTEGER DEFAULT 0,
             auto_confirm INTEGER DEFAULT 1,
+            consultation_fee REAL DEFAULT 500.0,
             FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
           )
         ''');
@@ -78,6 +80,11 @@ void main() {
             notes TEXT,
             next_visit TEXT,
             created_at TEXT NOT NULL,
+            visit_type TEXT DEFAULT 'In person',
+            payment_method TEXT,
+            payment_status TEXT,
+            amount REAL DEFAULT 500.0,
+            meeting_link TEXT,
             FOREIGN KEY (patient_id) REFERENCES users (id) ON DELETE CASCADE,
             FOREIGN KEY (doctor_id) REFERENCES doctors (id) ON DELETE CASCADE
           )
@@ -163,6 +170,29 @@ void main() {
             user_id INTEGER NOT NULL,
             helpful INTEGER NOT NULL,
             UNIQUE(faq_id, user_id)
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE medical_records (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            patient_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            type TEXT NOT NULL,
+            file_path TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (patient_id) REFERENCES users (id) ON DELETE CASCADE
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE settings (
+            user_id INTEGER PRIMARY KEY,
+            reminders_on INTEGER DEFAULT 1,
+            chat_on INTEGER DEFAULT 1,
+            offers_on INTEGER DEFAULT 1,
+            remind_before TEXT DEFAULT '1 hour',
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
           )
         ''');
       },
@@ -498,6 +528,121 @@ void main() {
 
     final hasVoted = await supportRepo.hasUserVotedFaq('p1', 10);
     expect(hasVoted, isTrue);
+  });
+
+  test('One review per appointment constraint enforced', () async {
+    final dbHelper = TestDbHelper(db);
+    final authRepo = AuthRepository(dbHelper: dbHelper);
+    final apptRepo = AppointmentRepository(dbHelper: dbHelper);
+    final reviewRepo = ReviewRepository(dbHelper: dbHelper);
+    final doctorRepo = DoctorRepository(dbHelper: dbHelper);
+
+    final patient = await authRepo.registerUser(
+      fullName: 'Patient R',
+      email: 'pr@test.com',
+      password: 'Password123',
+      role: 'patient',
+    );
+
+    final doctorUser = await authRepo.registerUser(
+      fullName: 'Doctor R',
+      email: 'dr@test.com',
+      password: 'Password123',
+      role: 'doctor',
+    );
+
+    final doctor = await doctorRepo.getDoctorByUserId(doctorUser.id!);
+
+    final appt = await apptRepo.createAppointment(
+      patientId: patient.id!,
+      doctorId: doctor!.id!,
+      date: '2025-10-21',
+      time: '14:00',
+    );
+
+    await reviewRepo.submitReview(
+      appointmentId: appt.id!,
+      patientId: patient.id!,
+      doctorId: doctor.id!,
+      rating: 5,
+      comment: 'Excellent',
+    );
+
+    expect(
+      () => reviewRepo.submitReview(
+        appointmentId: appt.id!,
+        patientId: patient.id!,
+        doctorId: doctor.id!,
+        rating: 3,
+        comment: 'Duplicate review',
+      ),
+      throwsA(isA<Exception>()),
+    );
+  });
+
+  test('Payment status saved correctly', () async {
+    final dbHelper = TestDbHelper(db);
+    final authRepo = AuthRepository(dbHelper: dbHelper);
+    final apptRepo = AppointmentRepository(dbHelper: dbHelper);
+    final doctorRepo = DoctorRepository(dbHelper: dbHelper);
+
+    final patient = await authRepo.registerUser(
+      fullName: 'Patient Pay',
+      email: 'pay@test.com',
+      password: 'Password123',
+      role: 'patient',
+    );
+
+    final doctorUser = await authRepo.registerUser(
+      fullName: 'Doctor Pay',
+      email: 'docpay@test.com',
+      password: 'Password123',
+      role: 'doctor',
+    );
+
+    final doctor = await doctorRepo.getDoctorByUserId(doctorUser.id!);
+
+    final appt = await apptRepo.createAppointment(
+      patientId: patient.id!,
+      doctorId: doctor!.id!,
+      date: '2025-10-22',
+      time: '15:00',
+    );
+
+    await apptRepo.savePaymentInfo(appt.id!, 'GCash', 'paid', 500.0);
+    final updatedAppt = await apptRepo.getAppointmentById(appt.id!);
+
+    expect(updatedAppt!.paymentMethod, 'GCash');
+    expect(updatedAppt.paymentStatus, 'paid');
+    expect(updatedAppt.amount, 500.0);
+  });
+
+  test('Password reset and Account deletion removes user data', () async {
+    final dbHelper = TestDbHelper(db);
+    final authRepo = AuthRepository(dbHelper: dbHelper);
+    final settingsRepo = SettingsRepository(dbHelper: dbHelper);
+
+    final user = await authRepo.registerUser(
+      fullName: 'User Password',
+      email: 'pwd@test.com',
+      password: 'Password123',
+      role: 'patient',
+    );
+
+    // Password Change
+    final wrongOld = await settingsRepo.changePassword(user.id!, 'WrongOld', 'NewPass123');
+    expect(wrongOld, isFalse);
+
+    final correctChange = await settingsRepo.changePassword(user.id!, 'Password123', 'NewPass123');
+    expect(correctChange, isTrue);
+
+    final loginWithNew = await authRepo.login('pwd@test.com', 'NewPass123', 'patient');
+    expect(loginWithNew, isNotNull);
+
+    // Delete Account
+    await settingsRepo.deleteAccount(user.id!);
+    final loginAfterDelete = await authRepo.login('pwd@test.com', 'NewPass123', 'patient');
+    expect(loginAfterDelete, isNull);
   });
 
   testWidgets('Validation errors appear on empty text field submit', (WidgetTester tester) async {

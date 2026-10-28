@@ -62,6 +62,42 @@ class User {
   }
 }
 
+class ChatMessage {
+  final int? id;
+  final int appointmentId;
+  final int senderId;
+  final String text;
+  final String createdAt;
+
+  ChatMessage({
+    this.id,
+    required this.appointmentId,
+    required this.senderId,
+    required this.text,
+    required this.createdAt,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      if (id != null) 'id': id,
+      'appointment_id': appointmentId,
+      'sender_id': senderId,
+      'text': text,
+      'created_at': createdAt,
+    };
+  }
+
+  factory ChatMessage.fromMap(Map<String, dynamic> map) {
+    return ChatMessage(
+      id: map['id'] as int?,
+      appointmentId: map['appointment_id'] as int,
+      senderId: map['sender_id'] as int,
+      text: map['text'] as String,
+      createdAt: map['created_at'] as String,
+    );
+  }
+}
+
 class SupportMessage {
   final int? id;
   final int? userId;
@@ -164,6 +200,7 @@ class Doctor {
   final int yearsExperience;
   final int patientsCount;
   final int autoConfirm; // 1 or 0
+  final double consultationFee;
   final User? user;
 
   Doctor({
@@ -176,6 +213,7 @@ class Doctor {
     this.yearsExperience = 0,
     this.patientsCount = 0,
     this.autoConfirm = 1,
+    this.consultationFee = 500.0,
     this.user,
   });
 
@@ -190,6 +228,7 @@ class Doctor {
       'years_experience': yearsExperience,
       'patients_count': patientsCount,
       'auto_confirm': autoConfirm,
+      'consultation_fee': consultationFee,
     };
   }
 
@@ -204,6 +243,7 @@ class Doctor {
       yearsExperience: (map['years_experience'] as int?) ?? 0,
       patientsCount: (map['patients_count'] as int?) ?? 0,
       autoConfirm: (map['auto_confirm'] as int?) ?? 1,
+      consultationFee: (map['consultation_fee'] as num?)?.toDouble() ?? 500.0,
       user: user,
     );
   }
@@ -218,6 +258,7 @@ class Doctor {
     int? yearsExperience,
     int? patientsCount,
     int? autoConfirm,
+    double? consultationFee,
     User? user,
   }) {
     return Doctor(
@@ -230,6 +271,7 @@ class Doctor {
       yearsExperience: yearsExperience ?? this.yearsExperience,
       patientsCount: patientsCount ?? this.patientsCount,
       autoConfirm: autoConfirm ?? this.autoConfirm,
+      consultationFee: consultationFee ?? this.consultationFee,
       user: user ?? this.user,
     );
   }
@@ -310,6 +352,11 @@ class Appointment {
   final String? notes;
   final String? nextVisit;
   final String createdAt;
+  final String visitType; // 'In person' or 'Video call'
+  final String? paymentMethod; // 'GCash', 'Cash', 'Card'
+  final String? paymentStatus; // 'paid', 'pay at clinic'
+  final double amount;
+  final String? meetingLink;
   final User? patientUser;
   final Doctor? doctor;
 
@@ -324,6 +371,11 @@ class Appointment {
     this.notes,
     this.nextVisit,
     required this.createdAt,
+    this.visitType = 'In person',
+    this.paymentMethod,
+    this.paymentStatus,
+    this.amount = 500.0,
+    this.meetingLink,
     this.patientUser,
     this.doctor,
   });
@@ -340,6 +392,11 @@ class Appointment {
       'notes': notes,
       'next_visit': nextVisit,
       'created_at': createdAt,
+      'visit_type': visitType,
+      'payment_method': paymentMethod,
+      'payment_status': paymentStatus,
+      'amount': amount,
+      'meeting_link': meetingLink,
     };
   }
 
@@ -355,6 +412,11 @@ class Appointment {
       notes: map['notes'] as String?,
       nextVisit: map['next_visit'] as String?,
       createdAt: map['created_at'] as String,
+      visitType: (map['visit_type'] as String?) ?? 'In person',
+      paymentMethod: map['payment_method'] as String?,
+      paymentStatus: map['payment_status'] as String?,
+      amount: (map['amount'] as num?)?.toDouble() ?? 500.0,
+      meetingLink: map['meeting_link'] as String?,
       patientUser: patientUser,
       doctor: doctor,
     );
@@ -371,6 +433,11 @@ class Appointment {
     String? notes,
     String? nextVisit,
     String? createdAt,
+    String? visitType,
+    String? paymentMethod,
+    String? paymentStatus,
+    double? amount,
+    String? meetingLink,
     User? patientUser,
     Doctor? doctor,
   }) {
@@ -385,8 +452,105 @@ class Appointment {
       notes: notes ?? this.notes,
       nextVisit: nextVisit ?? this.nextVisit,
       createdAt: createdAt ?? this.createdAt,
+      visitType: visitType ?? this.visitType,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
+      amount: amount ?? this.amount,
+      meetingLink: meetingLink ?? this.meetingLink,
       patientUser: patientUser ?? this.patientUser,
       doctor: doctor ?? this.doctor,
+    );
+  }
+}
+
+class MedicalRecord {
+  final int? id;
+  final int patientId;
+  final String title;
+  final String type; // 'visit', 'prescription', 'result'
+  final String filePath;
+  final String createdAt;
+
+  MedicalRecord({
+    this.id,
+    required this.patientId,
+    required this.title,
+    required this.type,
+    required this.filePath,
+    required this.createdAt,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      if (id != null) 'id': id,
+      'patient_id': patientId,
+      'title': title,
+      'type': type,
+      'file_path': filePath,
+      'created_at': createdAt,
+    };
+  }
+
+  factory MedicalRecord.fromMap(Map<String, dynamic> map) {
+    return MedicalRecord(
+      id: map['id'] as int?,
+      patientId: map['patient_id'] as int,
+      title: map['title'] as String,
+      type: map['type'] as String,
+      filePath: map['file_path'] as String,
+      createdAt: map['created_at'] as String,
+    );
+  }
+}
+
+class UserSettings {
+  final int userId;
+  final bool remindersOn;
+  final bool chatOn;
+  final bool offersOn;
+  final String remindBefore; // '1 hour' or '1 day'
+
+  UserSettings({
+    required this.userId,
+    this.remindersOn = true,
+    this.chatOn = true,
+    this.offersOn = true,
+    this.remindBefore = '1 hour',
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'user_id': userId,
+      'reminders_on': remindersOn ? 1 : 0,
+      'chat_on': chatOn ? 1 : 0,
+      'offers_on': offersOn ? 1 : 0,
+      'remind_before': remindBefore,
+    };
+  }
+
+  factory UserSettings.fromMap(Map<String, dynamic> map) {
+    return UserSettings(
+      userId: map['user_id'] as int,
+      remindersOn: (map['reminders_on'] as int?) != 0,
+      chatOn: (map['chat_on'] as int?) != 0,
+      offersOn: (map['offers_on'] as int?) != 0,
+      remindBefore: (map['remind_before'] as String?) ?? '1 hour',
+    );
+  }
+
+  UserSettings copyWith({
+    int? userId,
+    bool? remindersOn,
+    bool? chatOn,
+    bool? offersOn,
+    String? remindBefore,
+  }) {
+    return UserSettings(
+      userId: userId ?? this.userId,
+      remindersOn: remindersOn ?? this.remindersOn,
+      chatOn: chatOn ?? this.chatOn,
+      offersOn: offersOn ?? this.offersOn,
+      remindBefore: remindBefore ?? this.remindBefore,
     );
   }
 }

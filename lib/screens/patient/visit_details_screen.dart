@@ -244,42 +244,74 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen> {
                     ),
                   ),
 
-                  if (appt.status == 'pending' || appt.status == 'confirmed')
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: const BoxDecoration(
-                        color: AppColors.white,
-                        border: Border(top: BorderSide(color: AppColors.line)),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: AppButton(
-                              text: 'Reschedule',
-                              isSecondary: true,
-                              onPressed: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  RouteNames.bookAppointment,
-                                  arguments: {
-                                    'doctorId': appt.doctorId,
-                                    'rescheduleAppointmentId': appt.id,
-                                  },
-                                );
-                              },
-                            ),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: const BoxDecoration(
+                      color: AppColors.white,
+                      border: Border(top: BorderSide(color: AppColors.line)),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (appt.visitType == 'Video call' && (appt.status == 'confirmed' || appt.status == 'in_progress')) ...[
+                          AppButton(
+                            text: 'Join video call',
+                            icon: Icons.video_call_rounded,
+                            onPressed: () {
+                              Navigator.pushNamed(
+                                context,
+                                RouteNames.videoCall,
+                                arguments: appt.id,
+                              );
+                            },
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: AppButton(
-                              text: 'Cancel',
-                              isDanger: true,
-                              onPressed: _showCancelDialog,
-                            ),
+                          const SizedBox(height: 8),
+                        ],
+                        if (appt.status == 'completed') ...[
+                          AppButton(
+                            text: 'View summary',
+                            icon: Icons.description_outlined,
+                            onPressed: () {
+                              Navigator.pushNamed(
+                                context,
+                                RouteNames.visitSummary,
+                                arguments: appt.id,
+                              );
+                            },
+                          ),
+                        ] else if (appt.status == 'pending' || appt.status == 'confirmed') ...[
+                          Row(
+                            children: [
+                              Expanded(
+                                child: AppButton(
+                                  text: 'Reschedule',
+                                  isSecondary: true,
+                                  onPressed: () {
+                                    Navigator.pushNamed(
+                                      context,
+                                      RouteNames.bookAppointment,
+                                      arguments: {
+                                        'doctorId': appt.doctorId,
+                                        'rescheduleAppointmentId': appt.id,
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: AppButton(
+                                  text: 'Cancel',
+                                  isDanger: true,
+                                  onPressed: _showCancelDialog,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
-                      ),
+                      ],
                     ),
+                  ),
                 ],
               ),
             ),

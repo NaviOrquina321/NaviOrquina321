@@ -10,13 +10,19 @@ import 'data/repositories/appointment_repository.dart';
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/availability_repository.dart';
 import 'data/repositories/doctor_repository.dart';
+import 'data/repositories/chat_repository.dart';
+import 'data/repositories/medical_record_repository.dart';
 import 'data/repositories/notification_repository.dart';
+import 'data/repositories/settings_repository.dart';
 import 'data/repositories/support_repository.dart';
 import 'providers/appointment_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/availability_provider.dart';
+import 'providers/chat_provider.dart';
 import 'providers/doctor_provider.dart';
+import 'providers/medical_record_provider.dart';
 import 'providers/notification_provider.dart';
+import 'providers/settings_provider.dart';
 import 'providers/support_provider.dart';
 import 'routes.dart';
 
@@ -90,6 +96,9 @@ class DoctorAppointmentApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AppointmentProvider(appointmentRepository: AppointmentRepository())),
         ChangeNotifierProvider(create: (_) => NotificationProvider(notificationRepository: NotificationRepository())),
         ChangeNotifierProvider(create: (_) => SupportProvider(supportRepository: SupportRepository())),
+        ChangeNotifierProvider(create: (_) => SettingsProvider(settingsRepository: SettingsRepository())),
+        ChangeNotifierProvider(create: (_) => MedicalRecordProvider(medicalRecordRepository: MedicalRecordRepository())),
+        ChangeNotifierProvider(create: (_) => ChatProvider(chatRepository: ChatRepository())),
       ],
       child: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {

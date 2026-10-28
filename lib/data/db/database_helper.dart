@@ -22,7 +22,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 4,
       onConfigure: _onConfigure,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
@@ -59,6 +59,7 @@ class DatabaseHelper {
         years_experience INTEGER DEFAULT 0,
         patients_count INTEGER DEFAULT 0,
         auto_confirm INTEGER DEFAULT 1,
+        consultation_fee REAL DEFAULT 500.0,
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
       )
     ''');
@@ -90,6 +91,11 @@ class DatabaseHelper {
         notes TEXT,
         next_visit TEXT,
         created_at TEXT NOT NULL,
+        visit_type TEXT DEFAULT 'In person',
+        payment_method TEXT,
+        payment_status TEXT,
+        amount REAL DEFAULT 500.0,
+        meeting_link TEXT,
         FOREIGN KEY (patient_id) REFERENCES users (id) ON DELETE CASCADE,
         FOREIGN KEY (doctor_id) REFERENCES doctors (id) ON DELETE CASCADE
       )
@@ -159,6 +165,55 @@ class DatabaseHelper {
     // Help & Support tables
     await _createSupportTables(db);
 
+    // Medical Records table
+    await db.execute('''
+      CREATE TABLE medical_records (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        patient_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        type TEXT NOT NULL,
+        file_path TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (patient_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Settings table
+    await db.execute('''
+      CREATE TABLE settings (
+        user_id INTEGER PRIMARY KEY,
+        reminders_on INTEGER DEFAULT 1,
+        chat_on INTEGER DEFAULT 1,
+        offers_on INTEGER DEFAULT 1,
+        remind_before TEXT DEFAULT '1 hour',
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Messages table (appointment chat)
+    await db.execute('''
+      CREATE TABLE messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        appointment_id INTEGER NOT NULL,
+        sender_id INTEGER NOT NULL,
+        text TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (appointment_id) REFERENCES appointments (id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Patient Notes table (private notes saved by doctor per patient)
+    await db.execute('''
+      CREATE TABLE patient_notes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        doctor_id INTEGER NOT NULL,
+        patient_id INTEGER NOT NULL,
+        note TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        UNIQUE(doctor_id, patient_id) ON CONFLICT REPLACE
+      )
+    ''');
+
     // Seed Data
     await _seedDatabase(db);
   }
@@ -200,6 +255,60 @@ class DatabaseHelper {
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await _createSupportTables(db);
+    }
+    if (oldVersion < 3) {
+      await db.execute("ALTER TABLE appointments ADD COLUMN visit_type TEXT DEFAULT 'In person'");
+      await db.execute("ALTER TABLE appointments ADD COLUMN payment_method TEXT");
+      await db.execute("ALTER TABLE appointments ADD COLUMN payment_status TEXT");
+      await db.execute("ALTER TABLE appointments ADD COLUMN amount REAL DEFAULT 500.0");
+      await db.execute("ALTER TABLE appointments ADD COLUMN meeting_link TEXT");
+      await db.execute("ALTER TABLE doctors ADD COLUMN consultation_fee REAL DEFAULT 500.0");
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS medical_records (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          patient_id INTEGER NOT NULL,
+          title TEXT NOT NULL,
+          type TEXT NOT NULL,
+          file_path TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (patient_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+      ''');
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS settings (
+          user_id INTEGER PRIMARY KEY,
+          reminders_on INTEGER DEFAULT 1,
+          chat_on INTEGER DEFAULT 1,
+          offers_on INTEGER DEFAULT 1,
+          remind_before TEXT DEFAULT '1 hour',
+          FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+      ''');
+    }
+    if (oldVersion < 4) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS messages (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          appointment_id INTEGER NOT NULL,
+          sender_id INTEGER NOT NULL,
+          text TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (appointment_id) REFERENCES appointments (id) ON DELETE CASCADE
+        )
+      ''');
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS patient_notes (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          doctor_id INTEGER NOT NULL,
+          patient_id INTEGER NOT NULL,
+          note TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          UNIQUE(doctor_id, patient_id) ON CONFLICT REPLACE
+        )
+      ''');
     }
   }
 

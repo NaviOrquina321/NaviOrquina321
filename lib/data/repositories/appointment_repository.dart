@@ -13,6 +13,7 @@ class AppointmentRepository {
     required String date, // 'yyyy-MM-dd'
     required String time, // 'HH:mm'
     String? reason,
+    String visitType = 'In person',
   }) async {
     final db = await dbHelper.database;
     final nowStr = DateTime.now().toIso8601String();
@@ -26,6 +27,8 @@ class AppointmentRepository {
       final status = autoConfirm == 1 ? 'confirmed' : 'pending';
 
       try {
+        final doctorFee = (doctorMap['consultation_fee'] as num?)?.toDouble() ?? 500.0;
+
         final id = await txn.insert('appointments', {
           'patient_id': patientId,
           'doctor_id': doctorId,
@@ -34,6 +37,8 @@ class AppointmentRepository {
           'reason': reason,
           'status': status,
           'created_at': nowStr,
+          'visit_type': visitType,
+          'amount': doctorFee,
         });
 
         final patientRes = await txn.query('users', where: 'id = ?', whereArgs: [patientId]);
@@ -74,6 +79,8 @@ class AppointmentRepository {
           reason: reason,
           status: status,
           createdAt: nowStr,
+          visitType: visitType,
+          amount: doctorFee,
         );
       } catch (e) {
         if (e.toString().contains('UNIQUE constraint failed')) {
@@ -320,6 +327,30 @@ class AppointmentRepository {
     final db = await dbHelper.database;
     final results = await db.query('prescriptions', where: 'appointment_id = ?', whereArgs: [appointmentId]);
     return results.map((r) => Prescription.fromMap(r)).toList();
+  }
+
+  Future<void> savePaymentInfo(int appointmentId, String paymentMethod, String paymentStatus, double amount) async {
+    final db = await dbHelper.database;
+    await db.update(
+      'appointments',
+      {
+        'payment_method': paymentMethod,
+        'payment_status': paymentStatus,
+        'amount': amount,
+      },
+      where: 'id = ?',
+      whereArgs: [appointmentId],
+    );
+  }
+
+  Future<void> saveMeetingLink(int appointmentId, String meetingLink) async {
+    final db = await dbHelper.database;
+    await db.update(
+      'appointments',
+      {'meeting_link': meetingLink},
+      where: 'id = ?',
+      whereArgs: [appointmentId],
+    );
   }
 
   Future<List<String>> getBookedSlotsForDoctorAndDate(int doctorId, String date) async {

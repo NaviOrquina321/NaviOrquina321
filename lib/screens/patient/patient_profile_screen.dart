@@ -168,9 +168,7 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                   Icons.history,
                   'Medical history',
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Medical history placeholder.')),
-                    );
+                    Navigator.pushNamed(context, RouteNames.medicalRecords);
                   },
                 ),
                 _buildProfileRow(
@@ -185,6 +183,13 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                   'Help & support',
                   onTap: () {
                     Navigator.pushNamed(context, RouteNames.helpSupport);
+                  },
+                ),
+                _buildProfileRow(
+                  Icons.settings_outlined,
+                  'Settings',
+                  onTap: () {
+                    Navigator.pushNamed(context, RouteNames.settings);
                   },
                 ),
               ],

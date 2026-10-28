@@ -238,6 +238,13 @@ class _DoctorProfileAccountScreenState extends State<DoctorProfileAccountScreen>
                     Navigator.pushNamed(context, RouteNames.helpSupport);
                   },
                 ),
+                _buildProfileRow(
+                  Icons.settings_outlined,
+                  'Settings',
+                  onTap: () {
+                    Navigator.pushNamed(context, RouteNames.settings);
+                  },
+                ),
               ],
 
               const SizedBox(height: 32),

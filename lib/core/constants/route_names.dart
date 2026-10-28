@@ -15,6 +15,9 @@ class RouteNames {
   static const String rateVisit = '/patient/rate-visit';
   static const String reminders = '/patient/reminders';
   static const String patientProfile = '/patient/profile';
+  static const String payment = '/patient/payment';
+  static const String visitSummary = '/patient/visit-summary';
+  static const String medicalRecords = '/patient/medical-records';
 
   // Doctor Routes
   static const String doctorDashboard = '/doctor/dashboard';
@@ -22,9 +25,16 @@ class RouteNames {
   static const String doctorAvailability = '/doctor/availability';
   static const String doctorProfileAccount = '/doctor/profile-account';
   static const String doctorConsultation = '/doctor/consultation';
+  static const String doctorReviews = '/doctor/reviews';
+  static const String patientDetails = '/doctor/patient-details';
 
   // Shared Routes
   static const String helpSupport = '/help-support';
   static const String supportChat = '/support-chat';
   static const String reportProblem = '/report-problem';
+  static const String settings = '/settings';
+  static const String videoCall = '/video-call';
+  static const String appointmentChat = '/appointment-chat';
+  static const String clinicLocation = '/clinic-location';
+  static const String offlineState = '/offline-state';
 }

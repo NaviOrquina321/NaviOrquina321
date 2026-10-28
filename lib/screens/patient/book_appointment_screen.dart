@@ -31,6 +31,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   List<DateTime> _availableDates = [];
   DateTime? _selectedDate;
   String? _selectedTimeSlot;
+  String _selectedVisitType = 'In person';
 
   List<Availability> _availabilities = [];
   List<String> _morningSlots = [];
@@ -202,13 +203,14 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
         date: dateStr,
         time: _selectedTimeSlot!,
         reason: _reasonController.text.trim().isEmpty ? 'General Consultation' : _reasonController.text.trim(),
+        visitType: _selectedVisitType,
       );
 
       if (mounted) {
         if (appt != null) {
           Navigator.pushReplacementNamed(
             context,
-            RouteNames.bookingConfirmed,
+            RouteNames.payment,
             arguments: appt.id,
           );
         } else if (apptProvider.errorMessage != null) {
@@ -284,6 +286,36 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                                 ],
                               ),
                             ),
+                          ),
+                          const SizedBox(height: 20),
+
+                          const Text(
+                            'Visit Type',
+                            style: TextStyle(color: AppColors.navy, fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ChoiceChip(
+                                  label: const Text('In person'),
+                                  selected: _selectedVisitType == 'In person',
+                                  onSelected: (selected) {
+                                    if (selected) setState(() => _selectedVisitType = 'In person');
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: ChoiceChip(
+                                  label: const Text('Video call'),
+                                  selected: _selectedVisitType == 'Video call',
+                                  onSelected: (selected) {
+                                    if (selected) setState(() => _selectedVisitType = 'Video call');
+                                  },
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 20),
 

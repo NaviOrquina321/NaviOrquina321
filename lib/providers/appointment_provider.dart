@@ -95,6 +95,7 @@ class AppointmentProvider extends ChangeNotifier {
     required String date,
     required String time,
     String? reason,
+    String visitType = 'In person',
   }) async {
     _setLoading(true);
     _errorMessage = null;
@@ -105,6 +106,7 @@ class AppointmentProvider extends ChangeNotifier {
         date: date,
         time: time,
         reason: reason,
+        visitType: visitType,
       );
       _setLoading(false);
       return appt;
@@ -112,6 +114,44 @@ class AppointmentProvider extends ChangeNotifier {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
       _setLoading(false);
       return null;
+    }
+  }
+
+  Future<bool> savePaymentInfo({
+    required int appointmentId,
+    required String paymentMethod,
+    required String paymentStatus,
+    required double amount,
+  }) async {
+    _setLoading(true);
+    try {
+      await appointmentRepository.savePaymentInfo(appointmentId, paymentMethod, paymentStatus, amount);
+      if (_selectedAppointment?.id == appointmentId) {
+        _selectedAppointment = _selectedAppointment!.copyWith(
+          paymentMethod: paymentMethod,
+          paymentStatus: paymentStatus,
+          amount: amount,
+        );
+      }
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  Future<bool> saveMeetingLink(int appointmentId, String meetingLink) async {
+    try {
+      await appointmentRepository.saveMeetingLink(appointmentId, meetingLink);
+      if (_selectedAppointment?.id == appointmentId) {
+        _selectedAppointment = _selectedAppointment!.copyWith(meetingLink: meetingLink);
+      }
+      if (!_disposed) notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 

@@ -19,6 +19,15 @@ dependencies:
   crypto: ^3.0.6
   google_fonts: ^6.2.1
   url_launcher: ^6.3.0
+  pdf: ^3.11.1
+  printing: ^5.13.2
+  share_plus: ^10.0.2
+  file_picker: ^8.1.3
+  connectivity_plus: ^6.0.5
+  permission_handler: ^11.3.1
+
+dependency_overrides:
+  image: 4.0.17
 
 dev_dependencies:
   flutter_test:
